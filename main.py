@@ -11,12 +11,12 @@ class Game:
 
     def __init__(self, screen_width:int, screen_height:int, frame_rate:int=60) -> None:
         """Initialize instance of game
-
         Args:
             screen_width (int): Width of game window
             screen_height (int): Height of game window
             frame_rate (int, optional): Target framerate (FPS) for game. Defaults to 60.
         """
+
         self.width = screen_width
         self.height = screen_height
         self.screen = pygame.display.set_mode((self.width, self.height))
