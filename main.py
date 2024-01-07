@@ -5,6 +5,24 @@ import pygame
 from pygame.locals import *
 from random import randint
 
+def clip(surface:pygame.Surface, x:int, y:int, width:int, height:int) -> pygame.Surface:
+    """Clipping function for pygame surfaces
+
+    Args:
+        surface (pygame.Surface): Surface to clip from
+        x (int): x-position of clip
+        y (int): y-position of clip
+        width (int): width of clip
+        height (int): height of clip
+
+    Returns:
+        pygame.Surface: New clipped surface
+    """
+    surface_copy = surface.copy()
+    surface_copy.set_clip(pygame.Rect(x,y,width,height))
+    return surface.subsurface(surface_copy.get_clip()).copy()
+
+
 class Menu(pygame.Surface):
     """Game menu"""
     def __init__(self, menu_width:int, menu_height:int) -> None:
@@ -36,6 +54,60 @@ class Button(pygame.Surface):
         self.rect = self.get_rect().move(x,y)
 
 
+class Font:
+    """Custom font generator from a png image"""
+    def __init__(self, font_path:str) -> None:
+        self.character_spacing = 1
+        current_character_width = 0
+        character_clip_count = 0
+        font_image = pygame.image.load(font_path).convert_alpha()
+        self.characters = {}
+
+        self.character_map = [
+            "A","B","C","D","E","F","G","H","I",
+            "J","K","L","M","N","O","P","Q","R",
+            "S","T","U","V","W","X","Y","Z","a",
+            "b","c","d","e","f","g","h","i","j",
+            "k","l","m","n","o","p","q","r","s",
+            "t","u","v","w","x","y","z","1","2",
+            "3","4","5","6","7","8","9","0","?",
+            "/","!",".",",",":",";","\"","(",")",
+            "[","]","<",">","-","+","=","%","@",
+            "#","_","$","'","&","*"
+        ]
+
+        for pixel in range(font_image.get_width()):
+            pixel_color = font_image.get_at((pixel,0)) # Returns color of pixel
+            if pixel_color == (255,0,0):
+                clipped_character_image = clip(font_image, (pixel - current_character_width), 0,
+                                               current_character_width, font_image.get_height())
+                self.characters[self.character_map[character_clip_count]] = clipped_character_image
+                character_clip_count += 1
+                current_character_width = 0
+            else:
+                current_character_width += 1
+        
+        self.character_space_width = self.characters["A"].get_width()
+
+    def render(self, surface:pygame.Surface, text:str, location:tuple=(0,0)) -> None:
+        """Renders text onto pygame surface using loaded font
+
+        Args:
+            surface (pygame.Surface): Surface to render text onto
+            text (str): Text to render
+            location (tuple, optional): Location on surface to render text (x,y). Defaults to (0,0).
+            size_factor (int, optional): Text size multiplier. Defaults to 1.
+        """
+        x_offset = 0
+
+        for character in text:
+            if character != " ":
+                surface.blit(self.characters[character],(location[0] + x_offset, location[1]))
+                x_offset += self.characters[character].get_width() + self.character_spacing
+            else:
+                x_offset += self.character_space_width - self.character_spacing*2
+
+
 class Game:
     """Game class"""
     pygame.init() # initialize pygame
@@ -56,18 +128,21 @@ class Game:
 
     def run(self) -> None:
         """Run game"""
-        self.screen.fill((10,10,10))
-        menu = Menu(self.width/2-100,self.height-100)
+        
+        font = Font("font.png")
+        menu = Menu(self.width/2-200,self.height-200)
         menu.center_window((self.width, self.height))
         menu.fill((randint(0,255),randint(0,255),randint(0,255)),menu.get_rect())
         button = Button(menu.get_width()//2-50,menu.get_height()//2-50,100,100)
+        font.render(menu,"Hello Kennedy",location=(20,20))
 
         while 1:
             keys = pygame.key.get_pressed()
+            self.screen.fill((255,255,255))
 
             if keys[K_ESCAPE]:
                 menu.blit(button, button.rect)
-                self.screen.blit(menu, menu.rect)
+            self.screen.blit(menu, menu.get_rect())
 
 
             if pygame.event.get(pygame.QUIT):
