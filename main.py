@@ -1,66 +1,14 @@
 # python 3.12.1
 import sys
-import os
 import pygame
 from pygame.locals import *
 from random import randint
-import time
-
-def swap_color(surface:pygame.Surface, old_color:pygame.Color,
-               new_color:pygame.Color) -> pygame.Surface:
-    """Takes a pygame surface and swaps a new color with an old color
-
-    Args:
-        surface (pygame.Surface): The target surface
-        old_color (pygame.Color): The old color
-        new_color (pygame.Color): The color to replace the old color
-
-    Returns:
-        pygame.Surface: The original surface with swapped colors
-    """
-    surface_copy = pygame.Surface(surface.get_size())
-    surface_copy.fill(new_color)
-    surface.set_colorkey(old_color)
-    surface_copy.blit(surface, (0,0))
-    return surface_copy
-
-def clip(surface:pygame.Surface, x:int, y:int, width:int, height:int) -> pygame.Surface:
-    """Clipping function for pygame surfaces
-
-    Args:
-        surface (pygame.Surface): Surface to clip from
-        x (int): x-position of clip
-        y (int): y-position of clip
-        width (int): width of clip
-        height (int): height of clip
-
-    Returns:
-        pygame.Surface: New clipped surface
-    """
-    surface_copy = surface.copy()
-    surface_copy.set_clip(pygame.Rect(x,y,width,height))
-    return surface.subsurface(surface_copy.get_clip()).copy()
-
-
-class Menu(pygame.Surface):
-    """Game menu"""
-    def __init__(self, menu_width:int, menu_height:int) -> None:
-        super().__init__((menu_width, menu_height))
-        self.rect = self.get_rect()
-    
-    def center_window(self, screen_resolution:tuple) -> None:
-        """Move menu rect to center of screen
-
-        Args:
-            screen_resolution (tuple): Size of game window
-        """
-        center_x = screen_resolution[0] // 2
-        center_y = screen_resolution[1] // 2
-        self.rect = (center_x - self.rect.centerx, center_y - self.rect.centery)
 
 class Button(pygame.Surface):
     """Button class"""
-    def __init__(self, x:int, y:int, width:int, height:int) -> None:
+    def __init__(self, x:int, y:int, width:int, height:int,
+                 button_color:pygame.Color=(255,255,255), message:str=None, message_location:tuple=(1,1),
+                 message_size_factor:int=1) -> None:
         """Create button rect
 
         Args:
@@ -68,26 +16,39 @@ class Button(pygame.Surface):
             y (int): y-position
             width (int): button width
             height (int): button height
+            button_color (pygame.Color, optional): Button color. Defaults to (255,255,255)
+            message (str, optional): text. Defaults to None.
+            message_location (tuple, optional): coordinate to place text. Defaults to (1,1)
+            message_size_factor (int, optional): Text size multiplier. Defaults to 1.
         """
         super().__init__((width,height))
-        self.x = x
-        self.y = y
-        self.rect = self.get_rect().move(x,y)
 
-    def button_text(self, message:str) -> None:
-        """Display text on button
+        if message is not None:
+            text = Font().render(self, message, message_location, message_size_factor)
+            self.color = button_color
+            self.fill(self.color, text.get_rect())
+            self.blit(text, text.get_rect().move(x,y))
+            self.rect = self.get_rect()
+            
+            
+
+        else:
+            self.rect = pygame.Rect(x,y,width,height)
+            self.color = button_color
+            self.fill(self.color, self.rect())
+
+    def update(self, surface:pygame.Surface) -> None:
+        """Render button on a surface
 
         Args:
-            message (str): text
+            surface (pygame.Surface): Surface to render button onto
         """
-        text = Font('font.png')
-        new_rect = text.render(self,message,(self.x,self.y))
-        self.rect = new_rect
+        surface.blit(self, self.rect)
 
 
 class Font:
     """Custom font generator from a png image"""
-    def __init__(self, font_path:str) -> None:
+    def __init__(self, font_path:str='font.png') -> None:
         self.character_spacing = 1
         current_character_width = 0
         character_clip_count = 0
@@ -120,7 +81,7 @@ class Font:
 
         self.character_space_width = self.characters["!"].get_width()*2.7
 
-    def render(self, surface:pygame.Surface, text:str, location:tuple=(0,0)) -> pygame.Rect:
+    def render(self, surface:pygame.Surface, text:str, location:tuple=(0,0), size_factor:int=1) -> pygame.Surface:
         """Renders text onto pygame surface using loaded font
 
         Args:
@@ -130,90 +91,181 @@ class Font:
             size_factor (int, optional): Text size multiplier. Defaults to 1.
         
         Returns:
-            (pygame.Rect): The rect occupied by text on the surface
+            (pygame.Surface): The surface with rendered text
         """
         x_offset = 0
-
+        surface_copy = surface.copy()
         text_surface_list = []
-        surface_copy = surface.copy().convert_alpha()
-        text_rect = (0,0,0,0)
 
         for character in text:
             if character != " ":
-                text_surface_list.append((self.characters[character],(location[0] + x_offset, location[1])))
-
-                self.character_spacing = self.characters[character].get_width()
-                x_offset += round(self.characters[character].get_width()+1)
-                text_rect = pygame.Rect(location[0],
-                         location[1],
-                         text_rect[2]+self.characters[character].get_rect().width,
-                         text_rect[3]+self.characters[character].get_rect().height)
+                text_surface_list.append((self.characters[character],
+                                          (location[0] + x_offset, location[1])))
+                x_offset += (self.characters[character].get_width()+1)*size_factor
             else:
-                x_offset += self.character_spacing - 1
-            
+                x_offset += 4*size_factor
+
+        if size_factor > 1:
+            for index, character in enumerate(text_surface_list):
+                character_surface = text_surface_list[index][0]
+                text_surface_list[index] = (
+                    pygame.transform.scale_by(character_surface, size_factor),
+                    text_surface_list[index][1]
+                    )
+
+        surface_copy = pygame.transform.scale(
+            surface_copy, (
+                location[0] + (text_surface_list[-1][1][0])+text_surface_list[-1][0].get_width(),
+                (location[1]+10*size_factor+location[1])
+                )
+            )
+
         surface_copy.blits(text_surface_list)
-        surface.blit(surface_copy,location)
+        return surface_copy.convert_alpha()
 
-        return text_rect
-
-
-class Game:
+class Game(pygame.Surface):
     """Game class"""
-    pygame.init() # initialize pygame
-
-    def __init__(self, screen_width:int, screen_height:int, frame_rate:int=60) -> None:
+    def __init__(self, surface:pygame.Surface, frame_rate:int=60) -> None:
         """Initialize instance of game
+
+        Args:
+            surface (pygame.Surface): The window surface to be used
+            frame_rate (int, optional): Target framerate (FPS). Defaults to 60.
+        """
+        self.screen = surface
+        self.clock = pygame.time.Clock()
+        self.fps = frame_rate
+        self.running = False
+
+    def run(self) -> None:
+        """Run game"""
+        self.running = True
+        pygame.event.clear() # clear event queue
+
+        while self.running:
+            self.screen.fill((255,255,255))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.running = False
+                        Menu(self.screen).run()
+
+            pygame.display.update()
+            self.clock.tick(self.fps)
+
+class Menu(pygame.Surface):
+    """Game menu"""
+    def __init__(self, window_surface:pygame.Surface, frame_rate:int=60) -> None:
+        super().__init__((window_surface.get_width(), window_surface.get_height()))
+        self.screen = window_surface
+        self.rect = self.get_rect()
+        self.clock = pygame.time.Clock()
+        self.fps = frame_rate
+        self.running = False
+
+    def center_window(self) -> None:
+        """Move menu rect to center of screen
+
+        Args:
+            screen_resolution (tuple): Size of game window
+        """
+        center_x = self.screen.get_width() // 2
+        center_y = self.screen.get_height() // 2
+        self.rect = (center_x - self.rect.centerx, center_y - self.rect.centery)
+    
+    def run(self) -> None:
+        """Run instance"""
+        self.running = True
+        pygame.event.clear() # clear event queue
+
+        exit_button = Button(x=10,y=10,width=157,height=200,message="Hey There", message_location=(2,1),message_size_factor=2)
+
+        while self.running:
+            self.screen.fill((0,255,0))
+            exit_button.update(self.screen)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.running = False
+
+            pygame.display.update()
+            self.clock.tick(self.fps)
+
+class Window:
+    """Window instance"""
+    def __init__(self, screen_width:int, screen_height:int) -> None:
+        """Initialize window instance
 
         Args:
             screen_width (int): Width of game window
             screen_height (int): Height of game window
             frame_rate (int, optional): Target framerate (FPS). Defaults to 60.
         """
+        pygame.init()
         self.width = screen_width
         self.height = screen_height
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.NOFRAME)
-        self.clock = pygame.time.Clock()
-        self.fps = frame_rate
 
-    def run(self) -> None:
-        """Run game"""
+def clip(surface:pygame.Surface, x:int, y:int, width:int, height:int) -> pygame.Surface:
+    """Clipping function for pygame surfaces
 
-        button = Button(1,1,108,20)
+    Args:
+        surface (pygame.Surface): Surface to clip from
+        x (int): x-position of clip
+        y (int): y-position of clip
+        width (int): width of clip
+        height (int): height of clip
 
-        menu = Menu(button.get_width()+2,button.get_height()+2)
-        menu.center_window((self.width, self.height))
-        menu.fill((100,100,100),menu.get_rect())
+    Returns:
+        pygame.Surface: New clipped surface
+    """
+    surface_copy = surface.copy()
+    surface_copy.set_clip(pygame.Rect(x,y,width,height))
+    return surface.subsurface(surface_copy.get_clip()).copy()
 
-        button.fill((230,230,230))
-        button.button_text("MAIN MENU")
-        button_rescaled = pygame.transform.scale_by(button,2)
-        
+def swap_color(surface:pygame.Surface, old_color:pygame.Color,
+               new_color:pygame.Color) -> pygame.Surface:
+    """Takes a pygame surface and swaps a new color with an old color
 
-        while 1:
-            keys = pygame.key.get_pressed()
-            self.screen.fill((255,255,255))
+    Args:
+        surface (pygame.Surface): The target surface
+        old_color (pygame.Color): The old color
+        new_color (pygame.Color): The color to replace the old color
 
-            
+    Returns:
+        pygame.Surface: The original surface with swapped colors
+    """
+    surface_copy = pygame.Surface(surface.get_size())
+    surface_copy.fill(new_color)
+    surface.set_colorkey(old_color)
+    surface_copy.blit(surface, (0,0))
+    return surface_copy
 
-            if keys[K_ESCAPE]:
-                pygame.quit()
-                sys.exit()
+def text_onto_surface(surface:pygame.Surface, message:str, coordinate:tuple) -> pygame.Surface:
+    """Renders text onto pygame surface
 
-            menu.blit(button_rescaled, button_rescaled.get_rect())
-            
-            
-            self.screen.blit(menu, menu.rect)
-            
+    Args:
+        surface (pygame.Surface): Surface to render on
+        message (str): Message to render
+        coordinate (tuple): Render location (x,y)
 
-
-            if pygame.event.get(pygame.QUIT):
-                pygame.quit()
-                sys.exit()
-
-            
-            pygame.display.update()
-            self.clock.tick(self.fps)
-
+    Returns:
+        pygame.Surface: New surface with rendered text
+    """
+    surface_copy = surface.copy()
+    text = Font('font.png')
+    text.render(surface_copy, message, coordinate)
+    return surface_copy
 
 if __name__ == "__main__":
-    Game(640,390).run()
+    Game(Window(640,390).screen).run()
