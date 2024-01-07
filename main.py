@@ -73,8 +73,13 @@ class Button(pygame.Surface):
         self.x = x
         self.y = y
         self.rect = self.get_rect().move(x,y)
-    
+
     def button_text(self, message:str) -> None:
+        """Display text on button
+
+        Args:
+            message (str): text
+        """
         text = Font('font.png')
         new_rect = text.render(self,message,(self.x,self.y))
         self.rect = new_rect
