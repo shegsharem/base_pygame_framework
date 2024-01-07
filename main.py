@@ -144,7 +144,7 @@ class Font:
                          text_rect[2]+self.characters[character].get_rect().width,
                          text_rect[3]+self.characters[character].get_rect().height)
             else:
-                x_offset += self.character_spacing / x_offset + 3
+                x_offset += self.character_spacing - 1
             
         surface_copy.blits(text_surface_list)
         surface.blit(surface_copy,location)
@@ -173,25 +173,28 @@ class Game:
     def run(self) -> None:
         """Run game"""
 
-        button = Button(1,1,144,13)
+        button = Button(1,1,108,20)
 
         menu = Menu(button.get_width()+2,button.get_height()+2)
         menu.center_window((self.width, self.height))
         menu.fill((100,100,100),menu.get_rect())
+
+        button.fill((230,230,230))
+        button.button_text("MAIN MENU")
+        button_rescaled = pygame.transform.scale_by(button,2)
         
 
         while 1:
             keys = pygame.key.get_pressed()
-            self.screen.fill((20,20,20))
+            self.screen.fill((255,255,255))
 
-            button.fill((230,230,230))
-            button.button_text("email = logan72091@gmail.com")
+            
 
             if keys[K_ESCAPE]:
                 pygame.quit()
                 sys.exit()
 
-            menu.blit(button, button.rect)
+            menu.blit(button_rescaled, button_rescaled.get_rect())
             
             
             self.screen.blit(menu, menu.rect)
