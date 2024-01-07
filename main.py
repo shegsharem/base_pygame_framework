@@ -4,6 +4,25 @@ import os
 import pygame
 from pygame.locals import *
 from random import randint
+import time
+
+def swap_color(surface:pygame.Surface, old_color:pygame.Color,
+               new_color:pygame.Color) -> pygame.Surface:
+    """Takes a pygame surface and swaps a new color with an old color
+
+    Args:
+        surface (pygame.Surface): The target surface
+        old_color (pygame.Color): The old color
+        new_color (pygame.Color): The color to replace the old color
+
+    Returns:
+        pygame.Surface: The original surface with swapped colors
+    """
+    surface_copy = pygame.Surface(surface.get_size())
+    surface_copy.fill(new_color)
+    surface.set_colorkey(old_color)
+    surface_copy.blit(surface, (0,0))
+    return surface_copy
 
 def clip(surface:pygame.Surface, x:int, y:int, width:int, height:int) -> pygame.Surface:
     """Clipping function for pygame surfaces
@@ -51,7 +70,14 @@ class Button(pygame.Surface):
             height (int): button height
         """
         super().__init__((width,height))
+        self.x = x
+        self.y = y
         self.rect = self.get_rect().move(x,y)
+    
+    def button_text(self, message:str) -> None:
+        text = Font('font.png')
+        new_rect = text.render(self,message,(self.x,self.y))
+        self.rect = new_rect
 
 
 class Font:
@@ -86,10 +112,10 @@ class Font:
                 current_character_width = 0
             else:
                 current_character_width += 1
-        
-        self.character_space_width = self.characters["A"].get_width()
 
-    def render(self, surface:pygame.Surface, text:str, location:tuple=(0,0)) -> None:
+        self.character_space_width = self.characters["!"].get_width()*2.7
+
+    def render(self, surface:pygame.Surface, text:str, location:tuple=(0,0)) -> pygame.Rect:
         """Renders text onto pygame surface using loaded font
 
         Args:
@@ -97,15 +123,33 @@ class Font:
             text (str): Text to render
             location (tuple, optional): Location on surface to render text (x,y). Defaults to (0,0).
             size_factor (int, optional): Text size multiplier. Defaults to 1.
+        
+        Returns:
+            (pygame.Rect): The rect occupied by text on the surface
         """
         x_offset = 0
 
+        text_surface_list = []
+        surface_copy = surface.copy().convert_alpha()
+        text_rect = (0,0,0,0)
+
         for character in text:
             if character != " ":
-                surface.blit(self.characters[character],(location[0] + x_offset, location[1]))
-                x_offset += self.characters[character].get_width() + self.character_spacing
+                text_surface_list.append((self.characters[character],(location[0] + x_offset, location[1])))
+
+                self.character_spacing = self.characters[character].get_width()
+                x_offset += round(self.characters[character].get_width()+1)
+                text_rect = pygame.Rect(location[0],
+                         location[1],
+                         text_rect[2]+self.characters[character].get_rect().width,
+                         text_rect[3]+self.characters[character].get_rect().height)
             else:
-                x_offset += self.character_space_width - self.character_spacing*2
+                x_offset += self.character_spacing / x_offset + 3
+            
+        surface_copy.blits(text_surface_list)
+        surface.blit(surface_copy,location)
+
+        return text_rect
 
 
 class Game:
@@ -122,27 +166,36 @@ class Game:
         """
         self.width = screen_width
         self.height = screen_height
-        self.screen = pygame.display.set_mode((self.width, self.height))#, pygame.NOFRAME)
+        self.screen = pygame.display.set_mode((self.width, self.height), pygame.NOFRAME)
         self.clock = pygame.time.Clock()
         self.fps = frame_rate
 
     def run(self) -> None:
         """Run game"""
-        
-        font = Font("font.png")
-        menu = Menu(self.width/2-200,self.height-200)
+
+        button = Button(1,1,144,13)
+
+        menu = Menu(button.get_width()+2,button.get_height()+2)
         menu.center_window((self.width, self.height))
-        menu.fill((randint(0,255),randint(0,255),randint(0,255)),menu.get_rect())
-        button = Button(menu.get_width()//2-50,menu.get_height()//2-50,100,100)
-        font.render(menu,"Hello Kennedy",location=(20,20))
+        menu.fill((100,100,100),menu.get_rect())
+        
 
         while 1:
             keys = pygame.key.get_pressed()
-            self.screen.fill((255,255,255))
+            self.screen.fill((20,20,20))
+
+            button.fill((230,230,230))
+            button.button_text("email = logan72091@gmail.com")
 
             if keys[K_ESCAPE]:
-                menu.blit(button, button.rect)
-            self.screen.blit(menu, menu.get_rect())
+                pygame.quit()
+                sys.exit()
+
+            menu.blit(button, button.rect)
+            
+            
+            self.screen.blit(menu, menu.rect)
+            
 
 
             if pygame.event.get(pygame.QUIT):
