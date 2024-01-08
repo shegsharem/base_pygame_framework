@@ -149,7 +149,7 @@ class Game:
         """Run game"""
         self.running = True
         pygame.event.clear() # clear event queue
-        message = Font("font.png").render("HELLO THERE", (0,0), 3, (0,100,100))
+        message = Font("font.png").render("Hello World!", (0,0), 2, (0,100,100))
 
         while self.running:
             self.screen.fill((255,255,255))
