@@ -39,8 +39,9 @@ class Button:
         """
         if self.message is not None:
             text = Font().render(self.message, self.message_location, self.message_size_factor)
-            text_rect = text.get_bounding_rect().move(self.x,self.y)
-            pygame.draw.rect(surface, self.color, text_rect,14,1,1,1,1)
+            text_rect = text.get_rect().move(self.x,self.y)
+            #text_rect.inflate_ip(28,28)
+            pygame.draw.rect(surface, self.color, text_rect, 14,20)
             surface.blit(text, text_rect)
         else:
             pygame.draw.rect(surface,self.color, self.rect, 0, 2)
@@ -51,6 +52,7 @@ class Font:
         self.character_spacing = 1
         current_character_width = 0
         character_clip_count = 0
+
         font_image = pygame.image.load(font_path).convert_alpha()
         self.characters = {}
 
@@ -80,7 +82,8 @@ class Font:
 
         self.character_space_width = self.characters["!"].get_width()
 
-    def render(self, text:str, location:tuple=(0,0), size_factor:int=1) -> pygame.Surface:
+    def render(self, text:str, location:tuple=(0,0), size_factor:int=1,
+               text_color:pygame.Color=None) -> pygame.Surface:
         """Renders text to pygame surface using loaded font
 
         Args:
@@ -111,10 +114,21 @@ class Font:
                     )
 
         text_surface = pygame.Surface((x_offset-size_factor,
-                                       text_surface_list[-1][0].get_height()))
-        text_surface.fill((255,255,255))
+                                       text_surface_list[-1][0].get_height()), pygame.SRCALPHA)
+        
+        #
+        
         text_surface.blits(text_surface_list)
-        return text_surface.convert_alpha()
+        
+        if text_color:
+            text_color = (text_color[0],
+                          text_color[1],
+                          text_color[2],
+                          255)
+            text_surface.fill(text_color,special_flags=pygame.BLEND_RGB_MAX)
+            return text_surface
+
+        return text_surface
 
 class Game:
     """Game class"""
@@ -134,11 +148,11 @@ class Game:
         """Run game"""
         self.running = True
         pygame.event.clear() # clear event queue
-        message = Font("font.png").render("HEY GRAHAM", (0,0), 3)
+        message = Font("font.png").render("HELLO THERE", (0,0), 3, (0,100,100))
 
         while self.running:
             self.screen.fill((255,255,255))
-            self.screen.blit(message, (2,2))
+            self.screen.blit(message, (0,0))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
