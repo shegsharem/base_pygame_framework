@@ -7,7 +7,7 @@ class Button:
     """Button class"""
     def __init__(self, x:int, y:int, width:int=10, height:int=10,
                  button_color:pygame.Color=(255,255,255,0), text:str=" ",
-                 text_location:tuple=(1,1), text_size_factor:int=1,
+                 text_location:tuple=(0,0), text_size_factor:int=1,
                  text_color:pygame.Color=None) -> None:
         """Create button rect
 
@@ -18,7 +18,7 @@ class Button:
             height (int): button height. Defaults to 10.
             button_color (pygame.Color, optional): Button color. Defaults to (255,255,255,255).
             text (str, optional): text. Defaults to " ".
-            text_location (tuple, optional): coordinate to place text. Defaults to (1,1)
+            text_location (tuple, optional): coordinate to place text. Defaults to (0,0)
             text_size_factor (int, optional): Text size multiplier. Defaults to 1.
             text_color (pygame.Color, optional): Text color. Defaults to None.
         """
@@ -42,11 +42,19 @@ class Button:
         if self.text != " ":
             text = Font().render(self.text, self.text_location,
                                  self.text_size_factor, self.text_color)
-            self.rect = text.get_rect().move(self.x,self.y)
-            pygame.draw.rect(surface, self.color, self.rect)
-            surface.blit(text, (self.x-1,self.y-1))
-            
-            
+
+            text_rect = text.get_bounding_rect()
+            text = clip(text, text_rect.x, text_rect.y, text_rect.width, text_rect.height)
+            text_rect = text.get_bounding_rect()
+
+            self.rect = self.rect.inflate(text_rect.width+self.text_size_factor*2,
+                                          text_rect.height+self.text_size_factor*2)
+
+            self.rect.topleft = (self.x, self.y)
+            text_rect.center = self.rect.center
+            pygame.draw.rect(surface, self.color, self.rect, border_radius=2*self.text_size_factor)
+            surface.blit(text, text_rect)
+ 
         else:
             pygame.draw.rect(surface,self.color, self.rect)
 
@@ -195,11 +203,11 @@ class Menu:
         self.running = True
         pygame.event.clear() # clear event queue
 
-        self.screen.fill((0,255,0))
-        menu_title = Font().render("Main Menu", (0,0), 4)
+        self.screen.fill((0,0,0))
+        menu_title = Font().render("Main Menu", (0,0), 4,text_color=(255,255,255))
         self.screen.blit(menu_title, (10,10))
 
-        exit_button = Button(x=0,y=0,text="EXIT",text_size_factor=4)
+        exit_button = Button(x=20,y=55,text="HEY",button_color= (202,2,2),text_size_factor=6, text_color=(255,255,255))
 
         exit_button.draw(self.screen)
 
@@ -267,4 +275,4 @@ def swap_color(surface:pygame.Surface, old_color:pygame.Color,
     return surface_copy
 
 if __name__ == "__main__":
-    Game(Window(640,390).screen).run()
+    Game(Window(1000,668).screen).run()
