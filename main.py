@@ -90,6 +90,7 @@ class Font:
             text (str): Text to render
             location (tuple, optional): Location on surface to render text (x,y). Defaults to (0,0).
             size_factor (int, optional): Text size multiplier. Defaults to 1.
+            text_color (pygame.Color, optional): Text color. Defaults to (0,0,0), black.
         
         Returns:
             (pygame.Surface): Pygame surface with rendered text
