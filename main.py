@@ -2,33 +2,35 @@
 import sys
 import pygame
 from pygame.locals import *
-from random import randint
 
 class Button:
     """Button class"""
-    def __init__(self, x:int, y:int, width:int, height:int,
-                 button_color:pygame.Color=(255,255,255), message:str=None,
-                 message_location:tuple=(1,1), message_size_factor:int=1) -> None:
+    def __init__(self, x:int, y:int, width:int=10, height:int=10,
+                 button_color:pygame.Color=(255,255,255,0), text:str=" ",
+                 text_location:tuple=(1,1), text_size_factor:int=1,
+                 text_color:pygame.Color=None) -> None:
         """Create button rect
 
         Args:
             x (int): x-position
             y (int): y-position
-            width (int): button width
-            height (int): button height
-            button_color (pygame.Color, optional): Button color. Defaults to (255,255,255)
-            message (str, optional): text. Defaults to None.
-            message_location (tuple, optional): coordinate to place text. Defaults to (1,1)
-            message_size_factor (int, optional): Text size multiplier. Defaults to 1.
+            width (int, optional): button width. Defaults to 10.
+            height (int): button height. Defaults to 10.
+            button_color (pygame.Color, optional): Button color. Defaults to (255,255,255,255).
+            text (str, optional): text. Defaults to " ".
+            text_location (tuple, optional): coordinate to place text. Defaults to (1,1)
+            text_size_factor (int, optional): Text size multiplier. Defaults to 1.
+            text_color (pygame.Color, optional): Text color. Defaults to None.
         """
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.color = button_color
-        self.message = message
-        self.message_location = message_location
-        self.message_size_factor = message_size_factor
+        self.text = text
+        self.text_location = text_location
+        self.text_size_factor = text_size_factor
+        self.text_color = text_color
         self.rect = pygame.Rect(x,y,width,height)
 
     def draw(self, surface:pygame.Surface) -> None:
@@ -37,14 +39,16 @@ class Button:
         Args:
             surface (pygame.Surface): Surface to render button onto
         """
-        if self.message is not None:
-            text = Font().render(self.message, self.message_location, self.message_size_factor)
-            text_rect = text.get_rect().move(self.x,self.y)
-            #text_rect.inflate_ip(28,28)
-            pygame.draw.rect(surface, self.color, text_rect, 14,20)
-            surface.blit(text, text_rect)
+        if self.text != " ":
+            text = Font().render(self.text, self.text_location,
+                                 self.text_size_factor, self.text_color)
+            self.rect = text.get_rect().move(self.x,self.y)
+            pygame.draw.rect(surface, self.color, self.rect)
+            surface.blit(text, (self.x-1,self.y-1))
+            
+            
         else:
-            pygame.draw.rect(surface,self.color, self.rect, 0, 2)
+            pygame.draw.rect(surface,self.color, self.rect)
 
 class Font:
     """Custom font generator from a png image"""
@@ -88,7 +92,8 @@ class Font:
 
         Args:
             text (str): Text to render
-            location (tuple, optional): Location on surface to render text (x,y). Defaults to (0,0).
+            location (tuple, optional): Location on surface to render text (x,y).
+                Note: May clip text if not (0,0). Defaults to (0,0).
             size_factor (int, optional): Text size multiplier. Defaults to 1.
             text_color (pygame.Color, optional): Text color. Defaults to (0,0,0), black.
         
@@ -116,11 +121,9 @@ class Font:
 
         text_surface = pygame.Surface((x_offset-size_factor,
                                        text_surface_list[-1][0].get_height()), pygame.SRCALPHA)
-        
-        #
-        
+
         text_surface.blits(text_surface_list)
-        
+
         if text_color:
             text_color = (text_color[0],
                           text_color[1],
@@ -193,13 +196,14 @@ class Menu:
         pygame.event.clear() # clear event queue
 
         self.screen.fill((0,255,0))
+        menu_title = Font().render("Main Menu", (0,0), 4)
+        self.screen.blit(menu_title, (10,10))
 
-        exit_button = Button(x=100,y=200,width=157,height=200,message="EXIT",message_size_factor=23)
+        exit_button = Button(x=0,y=0,text="EXIT",text_size_factor=4)
+
         exit_button.draw(self.screen)
 
         while self.running:
-
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -263,4 +267,4 @@ def swap_color(surface:pygame.Surface, old_color:pygame.Color,
     return surface_copy
 
 if __name__ == "__main__":
-    Game(Window(1920,1080).screen).run()
+    Game(Window(640,390).screen).run()
