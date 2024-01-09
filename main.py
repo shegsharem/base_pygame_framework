@@ -6,9 +6,10 @@ from pygame.locals import *
 class Button:
     """Button class"""
     def __init__(self, x:int, y:int, width:int=10, height:int=10,
-                 button_color:pygame.Color=(255,255,255,0), text:str=" ",
+                 button_color:pygame.Color=(255,255,255,0),
+                 button_highlighted_color:pygame.Color=(255,255,255,0), text:str=" ",
                  text_location:tuple=(0,0), text_size_factor:int=1,
-                 text_color:pygame.Color=None) -> None:
+                 text_color:pygame.Color=None, button_corner_radius:int=0) -> None:
         """Create button rect
 
         Args:
@@ -16,19 +17,23 @@ class Button:
             y (int): y-position
             width (int, optional): button width. Defaults to 10.
             height (int): button height. Defaults to 10.
-            button_color (pygame.Color, optional): Button color. Defaults to (255,255,255,255).
+            button_color (pygame.Color, optional): Button color. Defaults to (255,255,255,0).
+            button_hightlighted_color (pygame.Color, optional): Button highlighted color. Defaults to (255,255,255,0).
             text (str, optional): text. Defaults to " ".
             text_location (tuple, optional): coordinate to place text. Defaults to (0,0)
             text_size_factor (int, optional): Text size multiplier. Defaults to 1.
             text_color (pygame.Color, optional): Text color. Defaults to None.
+            button_corner_radius (int, optional): Button corner radius. Defaults to 0.
         """
         self.x = x
         self.y = y
         self.color = button_color
+        self.highlighted_color = button_highlighted_color
         self.text = text
         self.text_location = text_location
         self.text_size_factor = text_size_factor
         self.text_color = text_color
+        self.corner_radius = button_corner_radius
         self.rect = pygame.Rect(x,y,width,height)
         self.mask = None
         self.surface = None
@@ -50,8 +55,8 @@ class Button:
             text = clip(text, text_rect.x, text_rect.y, text_rect.width, text_rect.height)
             text_rect = text.get_bounding_rect()
 
-            self.rect.width = text_rect.width * self.text_size_factor//2.5
-            self.rect.height = text_rect.height * self.text_size_factor//2
+            self.rect.width = text_rect.width + self.text_size_factor*10
+            self.rect.height = text_rect.height + self.text_size_factor*10
 
             self.rect.topleft = (self.x, self.y)
             text_rect.center = self.rect.center
@@ -62,15 +67,15 @@ class Button:
                 if self.surface.get_at((mouse_position[0]-self.x,
                                         mouse_position[1]-self.y)) == self.color or self.text_color:
 
-                    pygame.draw.rect(surface, (90,90,90), self.rect,
-                                     border_radius=self.text_size_factor)
+                    pygame.draw.rect(surface, self.highlighted_color, self.rect,
+                                     border_radius=self.text_size_factor*self.corner_radius)
 
                     surface.blit(text, text_rect)
                     self.mouse_hover = True
 
             else:
                 pygame.draw.rect(surface, self.color, self.rect,
-                                 border_radius=self.text_size_factor)
+                                 border_radius=self.text_size_factor*self.corner_radius)
 
                 surface.blit(text, text_rect)
                 self.mouse_hover = False
@@ -81,11 +86,13 @@ class Button:
                 if self.surface.get_at((mouse_position[0]-self.x,
                                         mouse_position[1]-self.y)) == self.color or self.text_color:
 
-                    pygame.draw.rect(surface, (90,90,90), self.rect)
+                    pygame.draw.rect(surface, self.highlighted_color, self.rect,
+                                     border_radius=self.corner_radius)
                     self.mouse_hover = True
 
             else:
-                pygame.draw.rect(surface,self.color, self.rect)
+                pygame.draw.rect(surface,self.color, self.rect,
+                                 border_radius=self.corner_radius)
                 self.mouse_hover = False
 
     def is_clicked(self) -> bool:
@@ -246,28 +253,33 @@ class Menu:
 
         menu_title = Font().render("Main Menu", size_factor=4,text_color=(255,255,255))
 
-        exit_button = Button(x=963,y=5,text="x",button_color= (255,0,0),
-                             text_size_factor=4,text_color=(255,255,255))
+        exit_button = Button(x=970,y=0,text="x",button_color= (23,23,23),
+                             button_highlighted_color=(255,0,0),
+                             text_size_factor=2,text_color=(255,255,255))
 
-        change_button = Button(x=20,y=400,text="Change Background",
-                               button_color =(28,28,28),text_size_factor=4,
-                               text_color=(255,255,255))
+        change_button = Button(x=20,y=65,text="Change Background",
+                               button_color =(50,50,50),text_size_factor=3,
+                               button_highlighted_color=(85,85,85),
+                               text_color=(255,255,255), button_corner_radius=4)
 
         color = (100,100,100)
 
         while self.running:
             self.screen.fill(color)
+            self.screen.blit(menu_title, (20,15))
+            exit_button.draw(self.screen)
+            change_button.draw(self.screen)
+
+            exit_button.color = color
+            
 
             if change_button.is_clicked():
                 color = (23,23,23)
+                print("Clicked")
 
             if exit_button.is_clicked():
                 pygame.quit()
                 sys.exit()
-
-            self.screen.blit(menu_title, (20,15))
-            exit_button.draw(self.screen)
-            change_button.draw(self.screen)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
