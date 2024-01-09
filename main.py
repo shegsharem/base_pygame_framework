@@ -99,7 +99,6 @@ class Button:
                 return True
         return False
 
-
 class Font:
     """Custom font generator from a png image"""
     def __init__(self, font_path:str='font.png') -> None:
@@ -247,26 +246,25 @@ class Menu:
 
         menu_title = Font().render("Main Menu", size_factor=4,text_color=(255,255,255))
 
-        exit_button = Button(x=795,y=5,text="x",button_color= (255,0,0),
-                             text_size_factor=10,text_color=(255,255,255))
+        exit_button = Button(x=963,y=5,text="x",button_color= (255,0,0),
+                             text_size_factor=4,text_color=(255,255,255))
 
         change_button = Button(x=20,y=400,text="Change Background",
                                button_color =(28,28,28),text_size_factor=4,
                                text_color=(255,255,255))
-        
-        color = (100,100,100)
 
+        color = (100,100,100)
 
         while self.running:
             self.screen.fill(color)
 
             if change_button.is_clicked():
                 color = (23,23,23)
-            
+
             if exit_button.is_clicked():
                 pygame.quit()
                 sys.exit()
-            
+
             self.screen.blit(menu_title, (20,15))
             exit_button.draw(self.screen)
             change_button.draw(self.screen)
