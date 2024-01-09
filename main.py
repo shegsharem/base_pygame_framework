@@ -4,13 +4,15 @@ import pygame
 from pygame.locals import *
 
 class Button:
-    """Button class"""
+    """Simple button class."""
+
     def __init__(self, x:int, y:int,
                  width:int=10, height:int=10,
-                 button_color:pygame.Color=(255,255,255,0),
-                 button_highlighted_color:pygame.Color=(255,255,255,0),
-                 text:str=" ", text_location:tuple=(0,0), text_size_factor:int=1,
-                 text_color:pygame.Color=None, button_corner_radius:int=0) -> None:
+                 button_color:tuple=(255,255,255),
+                 button_highlighted_color:tuple=(255,255,255),
+                 text:str=None, text_size_factor:int=1,
+                 text_color:tuple=None, button_border_radius:int=0, anchor:str=None,
+                 callback=None) -> None:
         """Create button rect
 
         Args:
@@ -18,93 +20,155 @@ class Button:
             y (int): y-position
             width (int, optional): button width. Defaults to 10.
             height (int): button height. Defaults to 10.
-            button_color (pygame.Color, optional): Button color. Defaults to (255,255,255,0).
-            button_hightlighted_color (pygame.Color, optional): Button highlighted color. Defaults to (255,255,255,0).
-            text (str, optional): text. Defaults to " ".
-            text_location (tuple, optional): coordinate to place text. Defaults to (0,0)
+            button_color (tuple, optional): Button color. Defaults to (255,255,255).
+            button_hightlighted_color (tuple, optional): Button highlighted color.
+                Defaults to (255,255,255).
+            text (str, optional): text. Defaults to None.
             text_size_factor (int, optional): Text size multiplier. Defaults to 1.
-            text_color (pygame.Color, optional): Text color. Defaults to None.
-            button_corner_radius (int, optional): Button corner radius. Defaults to 0.
+            text_color (tuple, optional): Text color. Defaults to None.
+            button_border_radius (int, optional): Button corner radius. Defaults to 0.
+            anchor (optional): location to anchor button
+            Callback: Button callback for when clicked
         """
         self.x = x
         self.y = y
-        self.color = button_color
-        self.highlighted_color = button_highlighted_color
-        self.text = text
-        self.text_location = text_location
-        self.text_size_factor = text_size_factor
-        self.text_color = text_color
-        self.corner_radius = button_corner_radius
-        self.rect = pygame.Rect(x,y,width,height)
-        self.mask = None
-        self.surface = None
-        self.mouse_hover = False
+        self.width = width
+        self.height = height
+        self.corner_radius = button_border_radius
+        self.anchor = anchor
 
-    def draw(self, surface:pygame.Surface) -> None:
-        """Draw button on a surface
+        self.color = pygame.Color(button_color)
+        self.text_color = pygame.Color(text_color)
+        self.highlighted_color = pygame.Color(button_highlighted_color)
+
+        self.text = text
+        self.text_size_factor = text_size_factor
+
+        self.callback = callback
+
+        self.button(self.color)
+
+    def button(self, color:tuple=(0,0,0,0)) -> pygame.Surface:
+        """Create button
+
+        Returns: pygame.Surface: Button surface
+        """
+        if self.text:
+            text_surface = Font().render(
+                text=self.text,
+                size_factor=self.text_size_factor,
+                text_color=self.text_color
+            )
+
+            text_surface_rect = text_surface.get_rect()
+
+            button_surface = pygame.Surface(
+                (text_surface_rect.width+self.text_size_factor*10,
+                text_surface_rect.height+self.text_size_factor*10),
+                pygame.SRCALPHA
+            )
+
+            button_surface_rect = button_surface.get_rect()
+            text_surface_rect.center = button_surface_rect.center
+
+            pygame.draw.rect(
+                surface=button_surface,
+                color=color,
+                rect=button_surface_rect,
+                border_radius=self.corner_radius*self.text_size_factor
+            )
+
+            button_surface.blit(text_surface,text_surface_rect)
+            return button_surface
+
+        button_surface = pygame.Surface((self.width, self.height),pygame.SRCALPHA)
+        button_surface_rect = button_surface.get_rect()
+
+        pygame.draw.rect(
+                surface=button_surface,
+                color=color,
+                rect=button_surface_rect,
+                border_radius=self.corner_radius*self.text_size_factor
+            )
+
+        return button_surface
+
+    def check_mouse(self, button:pygame.Surface) -> (bool, bool):
+        """Check if mouse is hovering button
 
         Args:
-            surface (pygame.Surface): Surface to render button onto
+            screen (pygame.Surface): Main window
+            button_rect (pygame.Rect): Button surface
+
+        Returns: (bool, bool): Is hovering, is clicked
         """
+        is_hovering = 0
+        is_clicked = 0
         mouse_position = pygame.mouse.get_pos()
+        button_mask = pygame.mask.from_surface(button)
+        button_mask_surface = pygame.Mask.to_surface(button_mask)
+        button_mask_rect = button_mask_surface.get_rect().move(self.x,self.y)
 
-        if self.text != " ":
-            text = Font().render(self.text, self.text_location,
-                                 self.text_size_factor, self.text_color)
+        if button_mask_rect.collidepoint(mouse_position):
+            if button_mask.get_at((mouse_position[0]-self.x,
+                                   mouse_position[1]-self.y)):
+                is_hovering = 1
 
-            text_rect = text.get_bounding_rect()
-            text = clip(text, text_rect.x, text_rect.y, text_rect.width, text_rect.height)
-            text_rect = text.get_bounding_rect()
+        if pygame.mouse.get_pressed()[0]:
+            is_clicked = 1
 
-            self.rect.width = text_rect.width + self.text_size_factor*10
-            self.rect.height = text_rect.height + self.text_size_factor*10
+        return is_hovering, is_clicked
 
-            self.rect.topleft = (self.x, self.y)
-            text_rect.center = self.rect.center
 
-            self.surface = clip(surface, self.x, self.y, self.rect.width, self.rect.height)
+    def update(self, screen:pygame.Surface) -> pygame.Rect:
+        """Update button and draw on screen
 
-            if self.rect.collidepoint(mouse_position):
-                if self.surface.get_at((mouse_position[0]-self.x,mouse_position[1]-self.y)) == self.color or self.text_color:
+        Args:
+            screen (pygame.Surface): Main window
+            callback (optional): callback function for when clicked
 
-                    pygame.draw.rect(surface, self.highlighted_color, self.rect,
-                                     border_radius=self.text_size_factor*self.corner_radius)
-
-                    surface.blit(text, text_rect)
-                    self.mouse_hover = True
-
-            else:
-                pygame.draw.rect(surface, self.color, self.rect,
-                                 border_radius=self.text_size_factor*self.corner_radius)
-
-                surface.blit(text, text_rect)
-                self.mouse_hover = False
-
-        else:
-            self.surface = clip(surface, self.x, self.y, self.rect.width, self.rect.height)
-            if self.rect.collidepoint(mouse_position):
-                if self.surface.get_at((mouse_position[0]-self.x,
-                                        mouse_position[1]-self.y)) == self.color or self.text_color:
-
-                    pygame.draw.rect(surface, self.highlighted_color, self.rect,
-                                     border_radius=self.corner_radius)
-                    self.mouse_hover = True
-
-            else:
-                pygame.draw.rect(surface,self.color, self.rect,
-                                 border_radius=self.corner_radius)
-                self.mouse_hover = False
-
-    def is_clicked(self) -> bool:
-        """Function to check if button is clicked
-
-        Returns:
-            bool: Boolean of click
+        Returns: pygame.Rect
         """
-        if self.mouse_hover:
-            if pygame.mouse.get_pressed()[0]:
-                return True
-        return False
+        color, highlighted_color = self.color, self.highlighted_color
+        button = self.button(color)
+
+        is_hovering, is_clicked = self.check_mouse(button)
+
+        if is_hovering:
+            button = self.button(highlighted_color)
+            if is_clicked and callable(self.callback):
+                self.callback()
+
+        if self.anchor:
+            screen_rect, button_rect = screen.get_rect(), button.get_rect()
+
+            if self.anchor == 'topleft':
+                button_rect.topleft = screen_rect.topleft
+                self.x, self.y = button_rect.x, button_rect.y
+                return screen.blit(button,(self.x,self.y))
+
+            if self.anchor == 'topright':
+                button_rect.topright = screen_rect.topright
+                self.x, self.y = button_rect.x, button_rect.y
+                return screen.blit(button,(self.x,self.y))
+
+            if self.anchor == 'center':
+                button_rect.center = screen_rect.center
+                self.x, self.y = button_rect.x, button_rect.y
+                return screen.blit(button,(self.x,self.y))
+
+            if self.anchor == 'bottomleft':
+                button_rect.bottomleft = screen_rect.bottomleft
+                self.x, self.y = button_rect.x, button_rect.y
+                return screen.blit(button,(self.x,self.y))
+
+            if self.anchor == 'bottomright':
+                button_rect.bottomright = screen_rect.bottomright
+                self.x, self.y = button_rect.x, button_rect.y
+                return screen.blit(button,(self.x,self.y))
+
+        return screen.blit(button,(self.x,self.y))
+
 
 class Font:
     """Custom font generator from a png image"""
@@ -132,8 +196,12 @@ class Font:
         for pixel in range(font_image.get_width()):
             pixel_color = font_image.get_at((pixel,0)) # Returns color of pixel
             if pixel_color == (255,0,0):
-                clipped_character_image = clip(font_image, (pixel - current_character_width), 0,
-                                               current_character_width, font_image.get_height())
+
+                clipped_character_image = clip(
+                    font_image, (pixel-current_character_width), 0,
+                    current_character_width, font_image.get_height()
+                )
+
                 self.characters[self.character_map[character_clip_count]] = clipped_character_image
                 character_clip_count += 1
                 current_character_width = 0
@@ -142,7 +210,12 @@ class Font:
 
         self.character_space_width = self.characters["!"].get_width()
 
-    def render(self, text:str, location:tuple=(0,0), size_factor:int=1,
+    def __str__(self) -> str:
+        return f'{self.characters}'
+
+    def render(self,text:str,
+               location:tuple=(0,0),
+               size_factor:int=1,
                text_color:pygame.Color=None) -> pygame.Surface:
         """Renders text to pygame surface using loaded font
 
@@ -161,34 +234,47 @@ class Font:
 
         for character in text:
             if character != " ":
-                text_surface_list.append((self.characters[character],
-                                          (location[0] + x_offset, location[1])))
+
+                text_surface_list.append(
+                    (self.characters[character],
+                    (location[0]+x_offset,location[1]))
+                )
+
                 x_offset += (self.characters[character].get_width()+1)*size_factor
             else:
                 x_offset += 4*size_factor
 
         if size_factor > 1:
-            for index, character in enumerate(text_surface_list):
-                character_surface = text_surface_list[index][0]
-                text_surface_list[index] = (
-                    pygame.transform.scale_by(character_surface, size_factor),
-                    text_surface_list[index][1]
-                    )
+            for index,character in enumerate(text_surface_list):
+                character_surface = character[0]
 
-        text_surface = pygame.Surface((x_offset-size_factor,
-                                       text_surface_list[-1][0].get_height()), pygame.SRCALPHA)
+                text_surface_list[index] = (
+                    pygame.transform.scale_by(character_surface,size_factor),
+                    text_surface_list[index][1]
+                )
+
+        text_surface = pygame.Surface(
+            (x_offset-size_factor,
+            text_surface_list[-1][0].get_height()),
+            pygame.SRCALPHA
+        )
 
         text_surface.blits(text_surface_list)
+        text_surface_rect = text_surface.get_bounding_rect()
+
+        text_surface = clip(
+            text_surface,
+            text_surface_rect.x,
+            text_surface_rect.y,
+            text_surface_rect.width,
+            text_surface_rect.height
+        )
 
         if text_color:
-            text_color = (text_color[0],
-                          text_color[1],
-                          text_color[2],
-                          255)
             text_surface.fill(text_color,special_flags=pygame.BLEND_RGB_MAX)
             return text_surface
-
         return text_surface
+
 
 class Game:
     """Game class"""
@@ -203,6 +289,9 @@ class Game:
         self.clock = pygame.time.Clock()
         self.fps = frame_rate
         self.running = False
+
+    def __str__(self) -> str:
+        return f'The frame rate is set to {self.fps}.'
 
     def run(self) -> None:
         """Run game"""
@@ -245,6 +334,13 @@ class Menu:
         center_x = self.screen.get_width() // 2
         center_y = self.screen.get_height() // 2
         self.rect = (center_x - self.rect.centerx, center_y - self.rect.centery)
+    
+    def start_game(self) -> None:
+        self.running = False
+        Game(self.screen, self.fps).run()
+
+    def kill(self):
+        self.running = False
 
     def run(self) -> None:
         """Run instance"""
@@ -253,38 +349,24 @@ class Menu:
 
         menu_title = Font().render("Editor", size_factor=2,text_color=(255,255,255))
 
-        editor_button = Button(0,0,width=menu_title.get_width()*1.2-2,height=menu_title.get_height()*1.5
-                               ,button_color=(23,23,23),
-                               button_highlighted_color=(85,85,85),
-                               text_size_factor=2,text_color=(255,255,255))
+        test_button = Button(x=10,y=0,width=100,height=100,text="Play",
+                                   button_color =(50,50,50),text_size_factor=3,
+                                   button_highlighted_color=(85,85,85),
+                                   text_color=(255,255,255), button_border_radius=7,
+                                   callback=self.start_game)
 
-        exit_button = Button(x=970,y=0,text="x",button_color= (23,23,23),
+        exit_button = Button(x=0,y=0,text="x",button_color= (23,23,23),
                              button_highlighted_color=(255,0,0),
-                             text_size_factor=2,text_color=(255,255,255))
+                             text_size_factor=2,text_color=(255,255,255),
+                             callback=self.kill, anchor='topright')
 
-        change_button = Button(x=20,y=65,text="Change Background",
-                               button_color =(50,50,50),text_size_factor=3,
-                               button_highlighted_color=(85,85,85),
-                               text_color=(255,255,255), button_corner_radius=4)
-
-        color = (100,100,100)
+        color = (56,56,56)
 
         while self.running:
             self.screen.fill(color)
-            pygame.draw.rect(self.screen,(23,23,23),(0,0,self.screen.get_width(),30))
-            editor_button.draw(self.screen)
             self.screen.blit(menu_title, (5,7))
-            exit_button.draw(self.screen)
-            change_button.draw(self.screen)
-            
-
-            if change_button.is_clicked():
-                color = (23,23,23)
-                print("Clicked")
-
-            if exit_button.is_clicked():
-                pygame.quit()
-                sys.exit()
+            exit_button.update(self.screen)
+            test_button.update(self.screen)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -307,7 +389,7 @@ class Window:
         pygame.init()
         self.width = screen_width
         self.height = screen_height
-        self.screen = pygame.display.set_mode((self.width, self.height), pygame.NOFRAME)
+        self.screen = pygame.display.set_mode((self.width, self.height), pygame.NOFRAME, pygame.SRCALPHA)
 
 def clip(surface:pygame.Surface, x:int, y:int, width:int, height:int) -> pygame.Surface:
     """Clipping function for pygame surfaces
