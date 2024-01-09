@@ -68,7 +68,7 @@ class Button:
         mouse_position = pygame.mouse.get_pos()
         if self.rect.collidepoint(mouse_position):
             if pygame.mouse.get_pressed()[0]:
-                if self.surface.get_at((mouse_position[0]-self.x, mouse_position[1]-self.y)) == self.color:
+                if self.surface.get_at((mouse_position[0]-self.x, mouse_position[1]-self.y)) == self.color or self.text_color:
                     return True
         return False
 
