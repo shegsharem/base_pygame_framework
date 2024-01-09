@@ -24,14 +24,14 @@ class Button:
         """
         self.x = x
         self.y = y
-        self.width = width
-        self.height = height
         self.color = button_color
         self.text = text
         self.text_location = text_location
         self.text_size_factor = text_size_factor
         self.text_color = text_color
         self.rect = pygame.Rect(x,y,width,height)
+        self.mask = None
+        self.surface = None
 
     def draw(self, surface:pygame.Surface) -> None:
         """Draw button on a surface
@@ -56,6 +56,23 @@ class Button:
             surface.blit(text, text_rect)
         else:
             pygame.draw.rect(surface,self.color, self.rect)
+        
+        self.surface = clip(surface, self.x, self.y, self.rect.width, self.rect.height)
+
+
+    def is_clicked(self) -> bool:
+        """Function to check if button is clicked
+
+        Returns:
+            bool: Boolean of click
+        """
+        mouse_position = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mouse_position):
+            if pygame.mouse.get_pressed()[0]:
+                if self.surface.get_at((mouse_position[0]-self.x, mouse_position[1]-self.y)) == self.color:
+                    return True
+        return False
+
 
 class Font:
     """Custom font generator from a png image"""
@@ -205,20 +222,20 @@ class Menu:
         self.screen.fill((0,0,0))
         menu_title = Font().render("Main Menu", (0,0), 4,text_color=(255,255,255))
         self.screen.blit(menu_title, (10,10))
-
-        exit_button = Button(x=20,y=55,text="HEY",button_color= (202,2,2),text_size_factor=6, text_color=(255,255,255))
+        
+        exit_button = Button(x=20,y=55,text="EXIT",button_color= (202,2,2),text_size_factor=6, text_color=(255,255,255))
 
         exit_button.draw(self.screen)
 
         while self.running:
+            if exit_button.is_clicked():
+                pygame.quit()
+                sys.exit()
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
 
             pygame.display.update()
             self.clock.tick(self.fps)
