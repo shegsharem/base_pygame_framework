@@ -5,10 +5,11 @@ from pygame.locals import *
 
 class Button:
     """Button class"""
-    def __init__(self, x:int, y:int, width:int=10, height:int=10,
+    def __init__(self, x:int, y:int,
+                 width:int=10, height:int=10,
                  button_color:pygame.Color=(255,255,255,0),
-                 button_highlighted_color:pygame.Color=(255,255,255,0), text:str=" ",
-                 text_location:tuple=(0,0), text_size_factor:int=1,
+                 button_highlighted_color:pygame.Color=(255,255,255,0),
+                 text:str=" ", text_location:tuple=(0,0), text_size_factor:int=1,
                  text_color:pygame.Color=None, button_corner_radius:int=0) -> None:
         """Create button rect
 
@@ -64,8 +65,7 @@ class Button:
             self.surface = clip(surface, self.x, self.y, self.rect.width, self.rect.height)
 
             if self.rect.collidepoint(mouse_position):
-                if self.surface.get_at((mouse_position[0]-self.x,
-                                        mouse_position[1]-self.y)) == self.color or self.text_color:
+                if self.surface.get_at((mouse_position[0]-self.x,mouse_position[1]-self.y)) == self.color or self.text_color:
 
                     pygame.draw.rect(surface, self.highlighted_color, self.rect,
                                      border_radius=self.text_size_factor*self.corner_radius)
