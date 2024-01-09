@@ -246,18 +246,22 @@ class Menu:
         pygame.event.clear() # clear event queue
 
         menu_title = Font().render("Main Menu", size_factor=4,text_color=(255,255,255))
+
+        exit_button = Button(x=795,y=5,text="x",button_color= (255,0,0),
+                             text_size_factor=10,text_color=(255,255,255))
+
+        change_button = Button(x=20,y=400,text="Change Background",
+                               button_color =(28,28,28),text_size_factor=4,
+                               text_color=(255,255,255))
         
-        
-        exit_button = Button(x=795,y=5,text="x",button_color= (255,0,0),text_size_factor=10, text_color=(255,255,255))
-        change_button = Button(x=20,y=400,text="Change Background", button_color = (28,28,28),text_size_factor=4, text_color=(255,255,255))
+        color = (100,100,100)
 
 
         while self.running:
-            if not change_button.is_clicked():
-                self.screen.fill((100,100,100))
+            self.screen.fill(color)
 
             if change_button.is_clicked():
-                self.screen.fill((23,23,23))
+                color = (23,23,23)
             
             if exit_button.is_clicked():
                 pygame.quit()
@@ -346,4 +350,4 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     return surface_copy
 
 if __name__ == "__main__":
-    Game(Window(1000,668).screen).run()
+    Menu(Window(1000,668).screen).run()
