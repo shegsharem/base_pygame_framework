@@ -32,6 +32,7 @@ class Button:
         self.rect = pygame.Rect(x,y,width,height)
         self.mask = None
         self.surface = None
+        self.mouse_hover = False
 
     def draw(self, surface:pygame.Surface) -> None:
         """Draw button on a surface
@@ -39,6 +40,8 @@ class Button:
         Args:
             surface (pygame.Surface): Surface to render button onto
         """
+        mouse_position = pygame.mouse.get_pos()
+
         if self.text != " ":
             text = Font().render(self.text, self.text_location,
                                  self.text_size_factor, self.text_color)
@@ -47,17 +50,43 @@ class Button:
             text = clip(text, text_rect.x, text_rect.y, text_rect.width, text_rect.height)
             text_rect = text.get_bounding_rect()
 
-            self.rect = self.rect.inflate(text_rect.width+self.text_size_factor*2,
-                                          text_rect.height+self.text_size_factor*2)
+            self.rect.width = text_rect.width * self.text_size_factor//2.5
+            self.rect.height = text_rect.height * self.text_size_factor//2
 
             self.rect.topleft = (self.x, self.y)
             text_rect.center = self.rect.center
-            pygame.draw.rect(surface, self.color, self.rect, border_radius=2*self.text_size_factor)
-            surface.blit(text, text_rect)
-        else:
-            pygame.draw.rect(surface,self.color, self.rect)
-        self.surface = clip(surface, self.x, self.y, self.rect.width, self.rect.height)
 
+            self.surface = clip(surface, self.x, self.y, self.rect.width, self.rect.height)
+
+            if self.rect.collidepoint(mouse_position):
+                if self.surface.get_at((mouse_position[0]-self.x,
+                                        mouse_position[1]-self.y)) == self.color or self.text_color:
+
+                    pygame.draw.rect(surface, (90,90,90), self.rect,
+                                     border_radius=self.text_size_factor)
+
+                    surface.blit(text, text_rect)
+                    self.mouse_hover = True
+
+            else:
+                pygame.draw.rect(surface, self.color, self.rect,
+                                 border_radius=self.text_size_factor)
+
+                surface.blit(text, text_rect)
+                self.mouse_hover = False
+
+        else:
+            self.surface = clip(surface, self.x, self.y, self.rect.width, self.rect.height)
+            if self.rect.collidepoint(mouse_position):
+                if self.surface.get_at((mouse_position[0]-self.x,
+                                        mouse_position[1]-self.y)) == self.color or self.text_color:
+
+                    pygame.draw.rect(surface, (90,90,90), self.rect)
+                    self.mouse_hover = True
+
+            else:
+                pygame.draw.rect(surface,self.color, self.rect)
+                self.mouse_hover = False
 
     def is_clicked(self) -> bool:
         """Function to check if button is clicked
@@ -65,11 +94,9 @@ class Button:
         Returns:
             bool: Boolean of click
         """
-        mouse_position = pygame.mouse.get_pos()
-        if self.rect.collidepoint(mouse_position):
+        if self.mouse_hover:
             if pygame.mouse.get_pressed()[0]:
-                if self.surface.get_at((mouse_position[0]-self.x, mouse_position[1]-self.y)) == self.color or self.text_color:
-                    return True
+                return True
         return False
 
 
@@ -218,18 +245,27 @@ class Menu:
         self.running = True
         pygame.event.clear() # clear event queue
 
-        self.screen.fill((0,0,0))
-        menu_title = Font().render("Main Menu", (0,0), 4,text_color=(255,255,255))
-        self.screen.blit(menu_title, (10,10))
+        menu_title = Font().render("Main Menu", size_factor=4,text_color=(255,255,255))
         
-        exit_button = Button(x=20,y=55,text="EXIT",button_color= (202,2,2),text_size_factor=6, text_color=(255,255,255))
+        
+        exit_button = Button(x=795,y=5,text="x",button_color= (255,0,0),text_size_factor=10, text_color=(255,255,255))
+        change_button = Button(x=20,y=400,text="Change Background", button_color = (28,28,28),text_size_factor=4, text_color=(255,255,255))
 
-        exit_button.draw(self.screen)
 
         while self.running:
+            if not change_button.is_clicked():
+                self.screen.fill((100,100,100))
+
+            if change_button.is_clicked():
+                self.screen.fill((23,23,23))
+            
             if exit_button.is_clicked():
                 pygame.quit()
                 sys.exit()
+            
+            self.screen.blit(menu_title, (20,15))
+            exit_button.draw(self.screen)
+            change_button.draw(self.screen)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
