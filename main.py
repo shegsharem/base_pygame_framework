@@ -275,7 +275,6 @@ class Font:
             return text_surface
         return text_surface
 
-
 class Game:
     """Game class"""
     def __init__(self, surface:pygame.Surface, frame_rate:int=60) -> None:
@@ -324,6 +323,7 @@ class Menu:
         self.clock = pygame.time.Clock()
         self.fps = frame_rate
         self.running = False
+        self.background_color = (56,56,56)
 
     def center_window(self) -> None:
         """Move menu rect to center of screen
@@ -334,7 +334,7 @@ class Menu:
         center_x = self.screen.get_width() // 2
         center_y = self.screen.get_height() // 2
         self.rect = (center_x - self.rect.centerx, center_y - self.rect.centery)
-    
+
     def start_game(self) -> None:
         self.running = False
         Game(self.screen, self.fps).run()
@@ -349,24 +349,22 @@ class Menu:
 
         menu_title = Font().render("Editor", size_factor=2,text_color=(255,255,255))
 
-        test_button = Button(x=10,y=0,width=100,height=100,text="Play",
+        play_button = Button(x=10,y=0,width=100,height=100,text="Play",
                                    button_color =(50,50,50),text_size_factor=3,
                                    button_highlighted_color=(85,85,85),
                                    text_color=(255,255,255), button_border_radius=7,
-                                   callback=self.start_game)
+                                   callback=self.start_game, anchor='center')
 
         exit_button = Button(x=0,y=0,text="x",button_color= (23,23,23),
                              button_highlighted_color=(255,0,0),
                              text_size_factor=2,text_color=(255,255,255),
                              callback=self.kill, anchor='topright')
 
-        color = (56,56,56)
-
         while self.running:
-            self.screen.fill(color)
+            self.screen.fill(self.background_color)
             self.screen.blit(menu_title, (5,7))
             exit_button.update(self.screen)
-            test_button.update(self.screen)
+            play_button.update(self.screen)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
