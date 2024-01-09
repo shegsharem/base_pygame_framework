@@ -251,7 +251,12 @@ class Menu:
         self.running = True
         pygame.event.clear() # clear event queue
 
-        menu_title = Font().render("Main Menu", size_factor=4,text_color=(255,255,255))
+        menu_title = Font().render("Editor", size_factor=2,text_color=(255,255,255))
+
+        editor_button = Button(0,0,width=menu_title.get_width()*1.2-2,height=menu_title.get_height()*1.5
+                               ,button_color=(23,23,23),
+                               button_highlighted_color=(85,85,85),
+                               text_size_factor=2,text_color=(255,255,255))
 
         exit_button = Button(x=970,y=0,text="x",button_color= (23,23,23),
                              button_highlighted_color=(255,0,0),
@@ -266,11 +271,11 @@ class Menu:
 
         while self.running:
             self.screen.fill(color)
-            self.screen.blit(menu_title, (20,15))
+            pygame.draw.rect(self.screen,(23,23,23),(0,0,self.screen.get_width(),30))
+            editor_button.draw(self.screen)
+            self.screen.blit(menu_title, (5,7))
             exit_button.draw(self.screen)
             change_button.draw(self.screen)
-
-            exit_button.color = color
             
 
             if change_button.is_clicked():
