@@ -56,7 +56,6 @@ class Button:
             surface.blit(text, text_rect)
         else:
             pygame.draw.rect(surface,self.color, self.rect)
-        
         self.surface = clip(surface, self.x, self.y, self.rect.width, self.rect.height)
 
 
