@@ -54,7 +54,6 @@ class Button:
             text_rect.center = self.rect.center
             pygame.draw.rect(surface, self.color, self.rect, border_radius=2*self.text_size_factor)
             surface.blit(text, text_rect)
- 
         else:
             pygame.draw.rect(surface,self.color, self.rect)
 
@@ -272,6 +271,26 @@ def swap_color(surface:pygame.Surface, old_color:pygame.Color,
     surface_copy.fill(new_color)
     surface.set_colorkey(old_color)
     surface_copy.blit(surface, (0,0))
+    return surface_copy
+
+def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
+    """Gets an outline from mask of surface
+
+    Args:
+        surface (pygame.Surface): Surface to mask from
+        offset (tuple): Offset of outline
+    
+    Returns:
+
+    """
+    surface_copy = surface.copy()
+    mask = pygame.mask.from_surface(surface)
+    mask_surface = mask.to_surface()
+    mask_surface.set_colorkey((0,0,0))
+    surface_copy.blit(mask_surface, (offset[0]-1,offset[1]))
+    surface_copy.blit(mask_surface, (offset[0]+1,offset[1]))
+    surface_copy.blit(mask_surface, (offset[0],offset[1]-1))
+    surface_copy.blit(mask_surface, (offset[0],offset[1]+1))
     return surface_copy
 
 if __name__ == "__main__":
