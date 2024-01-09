@@ -11,8 +11,8 @@ class Button:
                  button_color:tuple=(255,255,255),
                  button_highlighted_color:tuple=(255,255,255),
                  text:str=None, text_size_factor:int=1,
-                 text_color:tuple=None, button_border_radius:int=0, anchor:str=None,
-                 callback=None) -> None:
+                 text_color:tuple=None, button_border_radius:int=0,
+                 anchor:str=None, callback=None) -> None:
         """Create button rect
 
         Args:
