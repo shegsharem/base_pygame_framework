@@ -118,11 +118,11 @@ class Button:
             if self.set_color == self.selected_color:
                 if not mouse_down:
                     self.set_color = self.color
-        
+            else:
+                self.set_color = self.color
 
         if self.set_color != current_button_color:
             self.button = self.create_button(self.set_color)
-        #button = self.button(self.color)
 
         if self.anchor:
             screen_rect, button_rect = screen.get_rect(), self.button.get_rect()

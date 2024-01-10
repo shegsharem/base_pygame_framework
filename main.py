@@ -1,4 +1,5 @@
 """ python 3.12.1 """
+# pylint: disable=maybe-no-member
 import sys
 import time
 import pygame
