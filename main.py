@@ -45,7 +45,7 @@ class Game:
         pygame.event.clear() # clear event queue
         message = Font().render("Hello World!", (0,0), 2, (0,100,100))
         self.screen.fill((255,255,255))
-        
+
 
         while self.running:
             last_time = time.time()
@@ -92,7 +92,7 @@ class Menu:
         self.running = False
         Game(self.screen, self.fps).run()
 
-    def kill(self):
+    def kill(self) -> None:
         self.running = False
 
     def run(self) -> None:
@@ -100,19 +100,22 @@ class Menu:
         self.running = True
         pygame.event.clear() # clear event queue
 
-        menu_title = Font().render("Editor", size_factor=2,text_color=(255,255,255))
+        menu_title = Font().render("Game", size_factor=2,text_color=(255,255,255))
 
-        play_button = Button(x=10,y=0,width=100,height=100,text="Play",
-                                   button_color =(50,50,50),text_size_factor=3,
-                                   button_highlighted_color=(85,85,85),
-                                   text_color=(255,255,255), button_border_radius=7,
-                                   callback=self.start_game, anchor='center')
+        play_button = Button(
+            text="Play", button_color =(50,50,50),text_size_factor=5,
+            button_highlighted_color=(85,85,85),
+            text_color=(255,255,255), button_border_radius=10,
+            callback=self.start_game, anchor='center'
+        )
 
-        exit_button = Button(x=0,y=0,text="x",button_color= self.background_color,
-                             button_highlighted_color=(255,0,0),
-                             text_size_factor=2,text_color=(255,255,255),
-                             callback=self.kill, anchor='topright')
-        
+        exit_button = Button(
+            x=0,y=0,text="x",button_color= self.background_color,
+            button_highlighted_color=(255,0,0),
+            text_size_factor=2,text_color=(255,255,255),
+            callback=self.kill, anchor='topright'
+        )
+
         self.screen.fill(self.background_color)
 
         while self.running:
@@ -186,4 +189,4 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     return surface_copy
 
 if __name__ == "__main__":
-    Menu(Window(640,390).screen,30).run()
+    Menu(Window(840,490).screen,60).run()
