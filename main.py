@@ -7,17 +7,6 @@ from button import Button
 from font import Font
 from player import Player
 
-class BoxSprite(pygame.sprite.Sprite):
-    def __init__(self, color, width, height):
-        super().__init__(self)
-
-        self.image = pygame.Surface((width,height))
-        self.image.fill(color)
-        self.rect = self.image.get_rect()
-
-    def update(self):
-        self.rect.move(10,0)
-
 class Game:
     """Game class"""
     def __init__(self, surface:pygame.Surface, frame_rate:int=60) -> None:
