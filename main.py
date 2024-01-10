@@ -5,6 +5,7 @@ import pygame
 from pygame.locals import *
 from button import Button
 from font import Font
+from player import Player
 
 class Game:
     """Game class"""
@@ -18,9 +19,11 @@ class Game:
         self.screen = surface
         self.clock = pygame.time.Clock()
         self.time = time.time()
-        self.deltatime:float = 0
         self.fps = frame_rate
         self.running = False
+
+        self.player = Player((10,10), "data/images/playerframes/player", 7)
+        self.player_position = (90,90)
 
     def __str__(self) -> str:
         return f'The frame rate is set to {self.fps}.'
@@ -29,12 +32,14 @@ class Game:
         """Run game"""
         self.running = True
         pygame.event.clear() # clear event queue
-        message = Font("font.png").render("Hello World!", (0,0), 2, (0,100,100))
+        message = Font().render("Hello World!", (0,0), 2, (0,100,100))
         self.screen.fill((255,255,255))
+        
 
         while self.running:
-            self.deltatime = time.time()
+            last_time = time.time()
             self.screen.blit(message, (0,0))
+            self.player.draw(self.screen)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -45,12 +50,15 @@ class Game:
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
                         Menu(self.screen).run()
+                    
+                    if event.key == pygame.K_a:
+                        self.player.move((1,0))
 
             pygame.display.update()
-            self.deltatime -= time.time()
+            deltatime = self.fps - (time.time()-last_time)
+            self.clock.tick(deltatime)
+            print(self.fps - deltatime)
 
-            self.clock.tick(self.fps+self.deltatime)
-            print(self.deltatime)
 
 class Menu:
     """Game menu"""
@@ -58,7 +66,6 @@ class Menu:
         self.screen = surface
         self.rect = self.screen.get_rect()
         self.clock = pygame.time.Clock()
-        self.deltatime:float = time.time()
         self.fps = frame_rate
         self.running = False
         self.background_color = (56,56,56)
@@ -98,13 +105,30 @@ class Menu:
                              text_size_factor=2,text_color=(255,255,255),
                              callback=self.kill, anchor='topright')
         
+        exit_button2 = Button(x=10,y=0,text="x",button_color= (23,23,23),
+                             button_highlighted_color=(255,0,0),
+                             text_size_factor=2,text_color=(255,255,255),
+                             callback=self.kill, anchor='topright')
+        exit_button3 = Button(x=20,y=0,text="x",button_color= (23,23,23),
+                             button_highlighted_color=(255,0,0),
+                             text_size_factor=2,text_color=(255,255,255),
+                             callback=self.kill, anchor='topright')
+        exit_button4 = Button(x=30,y=0,text="x",button_color= (23,23,23),
+                             button_highlighted_color=(255,0,0),
+                             text_size_factor=2,text_color=(255,255,255),
+                             callback=self.kill, anchor='topright')
+        
         self.screen.fill(self.background_color)
 
         while self.running:
-            self.deltatime = time.time()
+            deltatime = 0
+            last_time = time.time()
             
             self.screen.blit(menu_title, (5,7))
             exit_button.update(self.screen)
+            exit_button2.update(self.screen)
+            exit_button3.update(self.screen)
+            exit_button4.update(self.screen)
             play_button.update(self.screen)
 
             for event in pygame.event.get():
@@ -112,12 +136,10 @@ class Menu:
                     pygame.quit()
                     sys.exit()
 
-            pygame.display.update()
-
-            self.deltatime -= time.time()
-
-            self.clock.tick(self.fps+self.deltatime)
-            print(self.deltatime)
+            pygame.display.flip()
+            deltatime = self.fps - (time.time()-last_time)
+            self.clock.tick(deltatime)
+            print(self.fps - deltatime)
 
 class Window:
     """Window instance"""
@@ -132,7 +154,7 @@ class Window:
         pygame.init()
         self.width = screen_width
         self.height = screen_height
-        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.screen = pygame.display.set_mode((self.width, self.height),pygame.FULLSCREEN)
 
 def swap_color(surface:pygame.Surface, old_color:pygame.Color,
                new_color:pygame.Color) -> pygame.Surface:
@@ -173,4 +195,4 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     return surface_copy
 
 if __name__ == "__main__":
-    Menu(Window(256,300).screen,30).run()
+    Menu(Window(640,390).screen,165).run()

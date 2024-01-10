@@ -45,6 +45,9 @@ class Button:
 
         self.callback = callback
 
+        self.button_mask = None
+        self.button_mask_surface = None
+
         self.button(self.color)
 
     def button(self, color:tuple=(0,0,0,0)) -> pygame.Surface:
@@ -78,6 +81,10 @@ class Button:
             )
 
             button_surface.blit(text_surface,text_surface_rect)
+
+            if self.button_mask is None:
+                self.button_mask = pygame.mask.from_surface(button_surface)
+                self.button_mask_surface = pygame.Mask.to_surface(self.button_mask)
             return button_surface
 
         button_surface = pygame.Surface((self.width, self.height),pygame.SRCALPHA)
@@ -90,9 +97,11 @@ class Button:
                 border_radius=self.corner_radius*self.text_size_factor
             )
 
+        if self.button_mask is None:
+            self.button_mask = pygame.mask.from_surface(button_surface)
         return button_surface
 
-    def check_mouse(self, button:pygame.Surface) -> (bool, bool):
+    def check_mouse(self) -> (bool, bool):
         """Check if mouse is hovering button
 
         Args:
@@ -104,12 +113,10 @@ class Button:
         is_hovering = 0
         is_clicked = 0
         mouse_position = pygame.mouse.get_pos()
-        button_mask = pygame.mask.from_surface(button)
-        button_mask_surface = pygame.Mask.to_surface(button_mask)
-        button_mask_rect = button_mask_surface.get_rect().move(self.x,self.y)
+        button_mask_rect = self.button_mask_surface.get_rect().move(self.x,self.y)
 
         if button_mask_rect.collidepoint(mouse_position):
-            if button_mask.get_at((mouse_position[0]-self.x,
+            if self.button_mask.get_at((mouse_position[0]-self.x,
                                    mouse_position[1]-self.y)):
                 is_hovering = 1
 
@@ -130,7 +137,7 @@ class Button:
         color, highlighted_color = self.color, self.highlighted_color
         button = self.button(color)
 
-        is_hovering, is_clicked = self.check_mouse(button)
+        is_hovering, is_clicked = self.check_mouse()
 
         if is_hovering:
             button = self.button(highlighted_color)
