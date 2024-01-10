@@ -173,4 +173,4 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     return surface_copy
 
 if __name__ == "__main__":
-    Menu(Window(256,1440).screen,30).run()
+    Menu(Window(256,300).screen,30).run()
