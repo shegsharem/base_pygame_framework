@@ -7,6 +7,17 @@ from button import Button
 from font import Font
 from player import Player
 
+class BoxSprite(pygame.sprite.Sprite):
+    def __init__(self, color, width, height):
+        super().__init__(self)
+
+        self.image = pygame.Surface((width,height))
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        self.rect.move(10,0)
+
 class Game:
     """Game class"""
     def __init__(self, surface:pygame.Surface, frame_rate:int=60) -> None:
@@ -22,8 +33,8 @@ class Game:
         self.fps = frame_rate
         self.running = False
 
-        self.player = Player((10,10), "data/images/playerframes/player", 7)
-        self.player_position = (90,90)
+        #self.player = Player((10,10), "data/images/playerframes/player", 7)
+        #self.player_position = (90,90)
 
     def __str__(self) -> str:
         return f'The frame rate is set to {self.fps}.'
@@ -34,12 +45,14 @@ class Game:
         pygame.event.clear() # clear event queue
         message = Font().render("Hello World!", (0,0), 2, (0,100,100))
         self.screen.fill((255,255,255))
+        box = BoxSprite((0,0,0), 10,10)
         
 
         while self.running:
             last_time = time.time()
             self.screen.blit(message, (0,0))
-            self.player.draw(self.screen)
+            self.screen.blit(box,box.rect)
+            box.update()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -154,7 +167,7 @@ class Window:
         pygame.init()
         self.width = screen_width
         self.height = screen_height
-        self.screen = pygame.display.set_mode((self.width, self.height),pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((self.width, self.height))
 
 def swap_color(surface:pygame.Surface, old_color:pygame.Color,
                new_color:pygame.Color) -> pygame.Surface:
