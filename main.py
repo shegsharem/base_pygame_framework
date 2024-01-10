@@ -45,14 +45,11 @@ class Game:
         pygame.event.clear() # clear event queue
         message = Font().render("Hello World!", (0,0), 2, (0,100,100))
         self.screen.fill((255,255,255))
-        box = BoxSprite((0,0,0), 10,10)
         
 
         while self.running:
             last_time = time.time()
             self.screen.blit(message, (0,0))
-            self.screen.blit(box,box.rect)
-            box.update()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -63,15 +60,13 @@ class Game:
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
                         Menu(self.screen).run()
-                    
+
                     if event.key == pygame.K_a:
                         self.player.move((1,0))
 
             pygame.display.update()
             deltatime = self.fps - (time.time()-last_time)
             self.clock.tick(deltatime)
-            print(self.fps - deltatime)
-
 
 class Menu:
     """Game menu"""
@@ -113,20 +108,7 @@ class Menu:
                                    text_color=(255,255,255), button_border_radius=7,
                                    callback=self.start_game, anchor='center')
 
-        exit_button = Button(x=0,y=0,text="x",button_color= (23,23,23),
-                             button_highlighted_color=(255,0,0),
-                             text_size_factor=2,text_color=(255,255,255),
-                             callback=self.kill, anchor='topright')
-        
-        exit_button2 = Button(x=10,y=0,text="x",button_color= (23,23,23),
-                             button_highlighted_color=(255,0,0),
-                             text_size_factor=2,text_color=(255,255,255),
-                             callback=self.kill, anchor='topright')
-        exit_button3 = Button(x=20,y=0,text="x",button_color= (23,23,23),
-                             button_highlighted_color=(255,0,0),
-                             text_size_factor=2,text_color=(255,255,255),
-                             callback=self.kill, anchor='topright')
-        exit_button4 = Button(x=30,y=0,text="x",button_color= (23,23,23),
+        exit_button = Button(x=0,y=0,text="x",button_color= self.background_color,
                              button_highlighted_color=(255,0,0),
                              text_size_factor=2,text_color=(255,255,255),
                              callback=self.kill, anchor='topright')
@@ -139,9 +121,6 @@ class Menu:
             
             self.screen.blit(menu_title, (5,7))
             exit_button.update(self.screen)
-            exit_button2.update(self.screen)
-            exit_button3.update(self.screen)
-            exit_button4.update(self.screen)
             play_button.update(self.screen)
 
             for event in pygame.event.get():
@@ -152,7 +131,6 @@ class Menu:
             pygame.display.flip()
             deltatime = self.fps - (time.time()-last_time)
             self.clock.tick(deltatime)
-            print(self.fps - deltatime)
 
 class Window:
     """Window instance"""
@@ -167,7 +145,7 @@ class Window:
         pygame.init()
         self.width = screen_width
         self.height = screen_height
-        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.screen = pygame.display.set_mode((self.width, self.height),pygame.NOFRAME)
 
 def swap_color(surface:pygame.Surface, old_color:pygame.Color,
                new_color:pygame.Color) -> pygame.Surface:
@@ -208,4 +186,4 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     return surface_copy
 
 if __name__ == "__main__":
-    Menu(Window(640,390).screen,165).run()
+    Menu(Window(640,390).screen,30).run()

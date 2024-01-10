@@ -39,6 +39,8 @@ class Button:
         self.color = pygame.Color(button_color)
         self.text_color = pygame.Color(text_color)
         self.highlighted_color = pygame.Color(button_highlighted_color)
+        self.selected_color = self.highlighted_color.lerp((25,25,25),1)
+        self.set_color = self.color
 
         self.text = text
         self.text_size_factor = text_size_factor
@@ -101,29 +103,27 @@ class Button:
             self.button_mask = pygame.mask.from_surface(button_surface)
         return button_surface
 
-    def check_mouse(self) -> (bool, bool):
-        """Check if mouse is hovering button
-
-        Args:
-            screen (pygame.Surface): Main window
-            button_rect (pygame.Rect): Button surface
-
-        Returns: (bool, bool): Is hovering, is clicked
-        """
-        is_hovering = 0
-        is_clicked = 0
+    def check_mouse_hover(self) -> bool:
+        """Check if mouse is hovering button"""
         mouse_position = pygame.mouse.get_pos()
         button_mask_rect = self.button_mask_surface.get_rect().move(self.x,self.y)
 
         if button_mask_rect.collidepoint(mouse_position):
-            if self.button_mask.get_at((mouse_position[0]-self.x,
-                                   mouse_position[1]-self.y)):
-                is_hovering = 1
+            if self.button_mask.get_at(
+                (mouse_position[0]-self.x,
+                 mouse_position[1]-self.y)):
+                return True
+        return False
+
+    def get_mouse_event(self, last_event=False) -> bool | None:
+        # Down returns True
+        # Up returns False
 
         if pygame.mouse.get_pressed()[0]:
-            is_clicked = 1
+            return True
 
-        return is_hovering, is_clicked
+        if last_event:
+            return False
 
     def update(self, screen:pygame.Surface) -> pygame.Rect:
         """Update button and draw on screen
@@ -131,18 +131,25 @@ class Button:
         Args:
             screen (pygame.Surface): Main window
             callback (optional): callback function for when clicked
-
-        Returns: pygame.Rect
         """
-        color, highlighted_color = self.color, self.highlighted_color
-        button = self.button(color)
 
-        is_hovering, is_clicked = self.check_mouse()
+        mouse_event = self.get_mouse_event()
+        mouse_hover = self.check_mouse_hover()
 
-        if is_hovering:
-            button = self.button(highlighted_color)
-            if is_clicked and callable(self.callback):
+        if mouse_hover:
+            self.set_color = self.highlighted_color
+        
+        if not mouse_hover:
+            self.set_color = self.color
+
+        if mouse_event:
+            self.set_color = self.selected_color
+
+        if self.set_color == self.selected_color:
+            if callable(self.callback):
                 self.callback()
+
+        button = self.button(self.set_color)
 
         if self.anchor:
             screen_rect, button_rect = screen.get_rect(), button.get_rect()
