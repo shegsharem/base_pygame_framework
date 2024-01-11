@@ -3,7 +3,7 @@ import pygame
 
 class Font:
     """Custom font generator from a png image"""
-    def __init__(self, font_path:str='data/images/font.png') -> None:
+    def __init__(self, font_path:str='assets/font.png') -> None:
         self.character_spacing = 1
         current_character_width = 0
         character_clip_count = 0

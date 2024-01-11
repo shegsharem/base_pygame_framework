@@ -4,10 +4,11 @@ import sys
 import time
 import pygame
 from pygame.locals import *
-from button import Button, get_mask
-from font import Font
-from player import Player
+from src.button import Button, get_mask
+from src.font import Font
+from src.player import Player
 from random import randint
+from src.window import Window
 
 class Game:
     """Game class"""
@@ -35,7 +36,7 @@ class Game:
         self.running = True
         pygame.event.clear() # clear event queue
         self.screen.fill((255,255,255))
-        sample = pygame.transform.scale(pygame.image.load('data/images/dvd.png').convert_alpha(), (200,200))
+        sample = pygame.transform.scale(pygame.image.load('assets/images/dvd.png').convert_alpha(), (200,200))
         sample_mask = get_mask(sample)
         sample_rect = sample_mask.get_rect()
         sample_rect_pos = pygame.Vector2(sample_rect.center)
@@ -156,21 +157,6 @@ class Menu:
             pygame.display.flip()
             deltatime = self.fps - (time.time()-last_time)
             self.clock.tick(deltatime)
-
-class Window:
-    """Window instance"""
-    def __init__(self, screen_width:int, screen_height:int) -> None:
-        """Initialize window instance
-
-        Args:
-            screen_width (int): Width of game window
-            screen_height (int): Height of game window
-            frame_rate (int, optional): Target framerate (FPS). Defaults to 60.
-        """
-        pygame.init()
-        self.width = screen_width
-        self.height = screen_height
-        self.screen = pygame.display.set_mode((self.width, self.height),pygame.NOFRAME)
 
 def swap_color(surface:pygame.Surface, old_color:pygame.Color,
                new_color:pygame.Color) -> pygame.Surface:
