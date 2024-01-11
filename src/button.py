@@ -6,7 +6,7 @@ class Button:
     """Simple button class."""
 
     def __init__(self, x:int=0, y:int=0,
-                 width:int=10, height:int=10,
+                 width:int=1, height:int=1,
                  button_color:tuple=(255,255,255),
                  button_highlighted_color:tuple=(255,255,255),
                  text:str=None, text_size_factor:int=1,
@@ -63,11 +63,19 @@ class Button:
 
             text_surface_rect = text_surface.get_rect()
 
-            button_surface = pygame.Surface(
-                (text_surface_rect.width+self.text_size_factor*10,
-                text_surface_rect.height+self.text_size_factor*10),
-                pygame.SRCALPHA
-            )
+            if self.width==1 and self.height==1:
+                button_surface = pygame.Surface(
+                    (text_surface_rect.width+self.text_size_factor*10,
+                    text_surface_rect.height+self.text_size_factor*10),
+                    pygame.SRCALPHA
+                )
+
+            if self.width!=1 and self.height!=1:
+                button_surface = pygame.Surface(
+                    (self.width,
+                    self.height),
+                    pygame.SRCALPHA
+                )
 
             button_surface_rect = button_surface.get_rect()
             text_surface_rect.center = button_surface_rect.center
@@ -97,7 +105,8 @@ class Button:
     def update(self, screen:pygame.Surface) -> pygame.Rect:
         """Update button and draw on screen"""
         button_mask = get_mask(self.button)
-        button_mask_rect = button_mask.get_rect().move(self.x,self.y)
+        button_mask_rect = button_mask.get_rect().move(screen.get_rect().left + self.x,
+                                                       screen.get_rect().top + self.y)
         mouse_hover = check_mouse_hover(
             button_mask,
             button_mask_rect

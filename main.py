@@ -101,19 +101,13 @@ class Menu:
         self.running = False
         self.background_color = (56,56,56)
 
-    def center_window(self) -> None:
-        """Move menu rect to center of screen
-
-        Args:
-            screen_resolution (tuple): Size of game window
-        """
-        center_x = self.screen.get_width() // 2
-        center_y = self.screen.get_height() // 2
-        self.rect = (center_x - self.rect.centerx, center_y - self.rect.centery)
-
     def start_game(self) -> None:
         self.running = False
         Game(self.screen, self.fps).run()
+    
+    def start_editor(self):
+        self.running = False
+        Editor(self.screen, self.fps).run()
 
     def kill(self) -> None:
         self.running = False
@@ -126,14 +120,22 @@ class Menu:
         menu_title = Font().render("Game", size_factor=2,text_color=(255,255,255))
 
         play_button = Button(
-            text="<      Play      >", button_color =(50,50,50),text_size_factor=2,
-            button_highlighted_color=(85,85,85),
-            text_color=(255,255,255), button_border_radius=10,
-            callback=self.start_game, anchor='center'
+            text="Play",x=25,y=self.screen.get_height()-120,button_color =(65,65,65),text_size_factor=3,
+            button_highlighted_color=(95,95,95),
+            text_color=(255,255,255), button_border_radius=7,
+            callback=self.start_game
+        )
+
+        editor_button = Button(
+            text="Level Editor",x=25,y=self.screen.get_height()-50,button_color =(55,55,55),text_size_factor=2,
+            button_highlighted_color=(95,95,95),
+            text_color=(255,255,255), button_border_radius=7,
+            callback=self.start_editor
         )
 
         exit_button = Button(
-            x=0,y=0,text="x",button_color= self.background_color,
+            width=25,height=25,
+            text="x",button_color= self.background_color,
             button_highlighted_color=(255,0,0),
             text_size_factor=2,text_color=(255,255,255),
             callback=self.kill, anchor='topright'
@@ -148,6 +150,7 @@ class Menu:
             self.screen.blit(menu_title, (5,7))
             exit_button.update(self.screen)
             play_button.update(self.screen)
+            editor_button.update(self.screen)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -158,23 +161,81 @@ class Menu:
             deltatime = self.fps - (time.time()-last_time)
             self.clock.tick(deltatime)
 
-def swap_color(surface:pygame.Surface, old_color:pygame.Color,
-               new_color:pygame.Color) -> pygame.Surface:
-    """Takes a pygame surface and swaps a new color with an old color
+class Editor:
+    """Game menu"""
+    def __init__(self, surface:pygame.Surface, frame_rate:int=60) -> None:
+        self.screen = surface
+        self.rect = self.screen.get_rect()
+        self.clock = pygame.time.Clock()
+        self.fps = frame_rate
+        self.running = False
+        self.background_color = (56,56,56)
+    
+    def kill(self) -> None:
+        self.running = False
+        Menu(self.screen, self.fps).run()
 
-    Args:
-        surface (pygame.Surface): The target surface
-        old_color (pygame.Color): The old color
-        new_color (pygame.Color): The color to replace the old color
+    def run(self):
+        """Run instance"""
+        self.running = True
+        pygame.event.clear() # clear event queue
 
-    Returns:
-        pygame.Surface: The original surface with swapped colors
-    """
-    surface_copy = pygame.Surface(surface.get_size())
-    surface_copy.fill(new_color)
-    surface.set_colorkey(old_color)
-    surface_copy.blit(surface, (0,0))
-    return surface_copy
+        self.screen.fill(self.background_color)
+
+        editor_title = Font().render("Level Editor", size_factor=1,text_color=(255,255,255))
+
+        toolbar_frame = pygame.draw.rect(
+            self.screen,(64,64,64),
+            (10,55,self.screen.get_width()//5+10,
+            self.screen.get_height()-80),
+            border_radius=15
+        )
+
+        file_button = Button(
+            width=45,height=25,
+            text="File",button_color= (56,56,56),
+            button_highlighted_color=(80,80,80),
+            text_size_factor=2,text_color=(255,255,255),
+            callback=self.kill
+        )
+
+        edit_button = Button(
+            x=45,y=0,
+            width=48,height=25,
+            text="Edit",button_color= (56,56,56),
+            button_highlighted_color=(80,80,80),
+            text_size_factor=2,text_color=(255,255,255),
+            callback=self.kill
+        )
+
+        exit_button = Button(
+            x=0,y=0,
+            width=25,height=25,
+            text="x",button_color= self.background_color,
+            button_highlighted_color=(255,0,0),
+            text_size_factor=2,text_color=(255,255,255),
+            callback=self.kill, anchor='topright'
+        )
+
+        while self.running:
+            deltatime = 0
+            last_time = time.time()
+
+            self.screen.blit(editor_title, (2,self.screen.get_rect().bottom-10))
+            exit_button.update(self.screen)
+            file_button.update(self.screen)
+            edit_button.update(self.screen)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            pygame.display.flip()
+            deltatime = self.fps - (time.time()-last_time)
+            self.clock.tick(deltatime)
+
+
 
 def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     """Gets an outline from mask of surface
