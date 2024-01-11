@@ -7,6 +7,7 @@ from pygame.locals import *
 from button import Button
 from font import Font
 from player import Player
+from random import randint
 
 class Game:
     """Game class"""
@@ -33,13 +34,42 @@ class Game:
         """Run game"""
         self.running = True
         pygame.event.clear() # clear event queue
-        message = Font().render("Hello World!", (0,0), 2, (0,100,100))
         self.screen.fill((255,255,255))
+        sample = pygame.image.load('data/images/dvd.png').convert_alpha()
+        sample_rect = sample.get_bounding_rect()
+        sample_rect_pos = pygame.Vector2(sample_rect.center)
 
+        sample.fill((255,255,255),special_flags=pygame.BLEND_RGB_MAX)
+        speed = pygame.Vector2(1000, 1000)
+
+        last_time = time.time()
 
         while self.running:
+            dt = time.time() - last_time
             last_time = time.time()
-            self.screen.blit(message, (0,0))
+
+            self.screen.fill((0,0,0))
+            message = Font().render(str(round(dt,4)), (0,0), 2, (0,100,100))
+            self.screen.blit(message, (5,5))
+
+            if sample_rect_pos.x + (speed.x * dt) + (sample_rect.width/2) > (self.screen.get_width()):
+                speed.x *= -1
+            
+            if sample_rect_pos.y + (speed.y * dt) + (sample_rect.height/2) > (self.screen.get_height()):
+                speed.y *= -1
+
+            if sample_rect_pos.x  - (sample_rect.width/2) + (speed.x *dt) <= (0):
+                if abs(speed.x) != speed.x:
+                    speed.x *=-1
+
+            if sample_rect_pos.y + (sample_rect.height/2) + (speed.y *dt) <= (0):
+                if abs(speed.y) != speed.y:
+                    speed.y *=-1
+
+            sample_rect_pos += (speed * dt)
+            sample_rect.center = sample_rect_pos
+            self.screen.blit(sample,sample_rect.topleft)
+            #pygame.draw.rect(self.screen,(255,0,0), sample_rect)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -55,8 +85,6 @@ class Game:
                         self.player.move((1,0))
 
             pygame.display.update()
-            deltatime = self.fps - (time.time()-last_time)
-            self.clock.tick(deltatime)
 
 class Menu:
     """Game menu"""
@@ -93,7 +121,7 @@ class Menu:
         menu_title = Font().render("Game", size_factor=2,text_color=(255,255,255))
 
         play_button = Button(
-            text="Play", button_color =(50,50,50),text_size_factor=5,
+            text="<      Play      >", button_color =(50,50,50),text_size_factor=2,
             button_highlighted_color=(85,85,85),
             text_color=(255,255,255), button_border_radius=10,
             callback=self.start_game, anchor='center'
@@ -179,4 +207,4 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     return surface_copy
 
 if __name__ == "__main__":
-    Menu(Window(840,490).screen,60).run()
+    Menu(Window(1920,1080).screen,60).run()
