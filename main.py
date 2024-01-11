@@ -54,8 +54,6 @@ class Game:
             message = Font().render("Current time:", (0,0), 2, (100,100,100))
             t = Font().render(str(round(time.time(),4)), (0,0), 4, (200,0,0))
 
-            
-
             if sample_rect_pos.x + (speed.x * dt) + (sample_rect.width/3) > (self.screen.get_width()):
                 speed.x *= -1
             
