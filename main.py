@@ -4,7 +4,7 @@ import sys
 import time
 import pygame
 from pygame.locals import *
-from button import Button
+from button import Button, get_mask
 from font import Font
 from player import Player
 from random import randint
@@ -35,12 +35,13 @@ class Game:
         self.running = True
         pygame.event.clear() # clear event queue
         self.screen.fill((255,255,255))
-        sample = pygame.image.load('data/images/dvd.png').convert_alpha()
-        sample_rect = sample.get_bounding_rect()
+        sample = pygame.transform.scale(pygame.image.load('data/images/dvd.png').convert_alpha(), (200,200))
+        sample_mask = get_mask(sample)
+        sample_rect = sample_mask.get_rect()
         sample_rect_pos = pygame.Vector2(sample_rect.center)
 
         sample.fill((255,255,255),special_flags=pygame.BLEND_RGB_MAX)
-        speed = pygame.Vector2(1000, 1000)
+        speed = pygame.Vector2(200, 200)
 
         last_time = time.time()
 
@@ -49,20 +50,22 @@ class Game:
             last_time = time.time()
 
             self.screen.fill((0,0,0))
-            message = Font().render(str(round(dt,4)), (0,0), 2, (0,100,100))
-            self.screen.blit(message, (5,5))
+            message = Font().render("Current time:", (0,0), 2, (100,100,100))
+            t = Font().render(str(round(time.time(),4)), (0,0), 4, (200,0,0))
 
-            if sample_rect_pos.x + (speed.x * dt) + (sample_rect.width/2) > (self.screen.get_width()):
+            
+
+            if sample_rect_pos.x + (speed.x * dt) + (sample_rect.width/3) > (self.screen.get_width()):
                 speed.x *= -1
             
-            if sample_rect_pos.y + (speed.y * dt) + (sample_rect.height/2) > (self.screen.get_height()):
+            if sample_rect_pos.y + (speed.y * dt) + (sample_rect.height/3) > (self.screen.get_height()):
                 speed.y *= -1
 
-            if sample_rect_pos.x  - (sample_rect.width/2) + (speed.x *dt) <= (0):
+            if sample_rect_pos.x  - (sample_rect.width/3) + (speed.x *dt) <= (0):
                 if abs(speed.x) != speed.x:
                     speed.x *=-1
 
-            if sample_rect_pos.y + (sample_rect.height/2) + (speed.y *dt) <= (0):
+            if sample_rect_pos.y - (sample_rect.height/3) + (speed.y *dt) <= (0):
                 if abs(speed.y) != speed.y:
                     speed.y *=-1
 
@@ -81,8 +84,9 @@ class Game:
                         self.running = False
                         Menu(self.screen).run()
 
-                    if event.key == pygame.K_a:
-                        self.player.move((1,0))
+            self.screen.blit(message, (5,5))
+            self.screen.blit(t, (5,25))
+            self.screen.blit(sample,sample_rect)
 
             pygame.display.update()
 
@@ -207,4 +211,4 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     return surface_copy
 
 if __name__ == "__main__":
-    Menu(Window(1920,1080).screen,60).run()
+    Menu(Window(820,590).screen,60).run()
