@@ -9,6 +9,7 @@ class Font:
         character_clip_count = 0
 
         font_image = pygame.image.load(font_path).convert_alpha()
+
         self.characters = {}
 
         self.character_map = [
@@ -46,7 +47,7 @@ class Font:
 
     def render(self,text:str,
                location:tuple=(0,0),
-               size_factor:int=1,
+               size_factor:float=1,
                text_color:pygame.Color=None) -> pygame.Surface:
         """Renders text to pygame surface using loaded font
 

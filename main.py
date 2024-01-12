@@ -6,7 +6,7 @@ import pygame
 from pygame.locals import *
 from src.button import Button, get_mask
 from src.font import Font
-from src.player import Player
+#from src.player import Player
 from random import randint
 from src.window import Window
 
@@ -35,42 +35,41 @@ class Game:
         """Run game"""
         self.running = True
         pygame.event.clear() # clear event queue
-        self.screen.fill((255,255,255))
-        sample = pygame.transform.scale(pygame.image.load('assets/images/dvd.png').convert_alpha(), (200,200))
-        sample_mask = get_mask(sample)
-        sample_rect = sample_mask.get_rect()
-        sample_rect_pos = pygame.Vector2(sample_rect.center)
+        self.screen.fill((0,0,0))
+        self.player = Player()
 
-        sample.fill((255,255,255),special_flags=pygame.BLEND_RGB_MAX)
-        speed = pygame.Vector2(200, 200)
 
+        #sample = pygame.transform.scale(pygame.image.load('assets/images/dvd.png').convert_alpha(), (200,200))
+        #sample_mask = get_mask(sample)
+        #sample_rect = sample_mask.get_rect()
+        #sample_rect_pos = pygame.Vector2(sample_rect.center)
+#
+        #sample.fill((255,255,255),special_flags=pygame.BLEND_RGB_MAX)
+        #speed = pygame.Vector2(200, 200)
+#
         last_time = time.time()
-
+#
         while self.running:
             dt = time.time() - last_time
             last_time = time.time()
-
-            self.screen.fill((0,0,0))
-            message = Font().render("Current time:", (0,0), 2, (100,100,100))
-            t = Font().render(str(round(time.time(),4)), (0,0), 4, (200,0,0))
-
-            if sample_rect_pos.x + (speed.x * dt) + (sample_rect.width/3) > (self.screen.get_width()):
-                speed.x *= -1
-            
-            if sample_rect_pos.y + (speed.y * dt) + (sample_rect.height/3) > (self.screen.get_height()):
-                speed.y *= -1
-
-            if sample_rect_pos.x  - (sample_rect.width/3) + (speed.x *dt) <= (0):
-                if abs(speed.x) != speed.x:
-                    speed.x *=-1
-
-            if sample_rect_pos.y - (sample_rect.height/3) + (speed.y *dt) <= (0):
-                if abs(speed.y) != speed.y:
-                    speed.y *=-1
-
-            sample_rect_pos += (speed * dt)
-            sample_rect.center = sample_rect_pos
-            self.screen.blit(sample,sample_rect.topleft)
+#
+        #    if sample_rect_pos.x + (speed.x * dt) + (sample_rect.width/3) > (self.screen.get_width()):
+        #        speed.x *= -1
+        #    
+        #    if sample_rect_pos.y + (speed.y * dt) + (sample_rect.height/3) > (self.screen.get_height()):
+        #        speed.y *= -1
+#
+        #    if sample_rect_pos.x  - (sample_rect.width/3) + (speed.x *dt) <= (0):
+        #        if abs(speed.x) != speed.x:
+        #            speed.x *=-1
+#
+        #    if sample_rect_pos.y - (sample_rect.height/3) + (speed.y *dt) <= (0):
+        #        if abs(speed.y) != speed.y:
+        #            speed.y *=-1
+#
+        #    sample_rect_pos += (speed * dt)
+        #    sample_rect.center = sample_rect_pos
+        #    self.screen.blit(sample,sample_rect.topleft)
             #pygame.draw.rect(self.screen,(255,0,0), sample_rect)
 
             for event in pygame.event.get():
@@ -83,11 +82,35 @@ class Game:
                         self.running = False
                         Menu(self.screen).run()
 
-            self.screen.blit(message, (5,5))
-            self.screen.blit(t, (5,25))
-            self.screen.blit(sample,sample_rect)
+            self.player.update(self.screen)
 
-            pygame.display.update()
+            pygame.display.flip()
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self) -> None:
+        super().__init__()
+        self.position = pygame.Vector2(0,0)
+        self.velocity = pygame.Vector2(0,0)
+
+        self.image = pygame.transform.scale_by(
+            pygame.image.load('assets/images/circle.png').convert_alpha(),
+            4
+        )
+
+        self.rect = self.image.get_rect()
+        
+
+        self.outline = get_mask_outline(self.image, (1,1))
+        self.outline_rect = self.outline.get_rect()
+
+        #self.image.fill((100,100,100),special_flags=pygame.BLEND_RGB_MAX)
+        
+
+    def update(self, surface:pygame.Surface):
+        self.rect.move(self.velocity)
+        self.outline_rect.move(self.velocity)
+        surface.blit(self.outline, (0,0))
+        surface.blit(self.image, (0,0))
 
 class Menu:
     """Game menu"""
@@ -118,14 +141,17 @@ class Menu:
         menu_title = Font().render("Game", size_factor=2,text_color=(255,255,255))
 
         play_button = Button(
-            text="Play",x=25,y=self.screen.get_height()-120,button_color =(65,65,65),text_size_factor=3,
+            text="Play",x=25,y=self.screen.get_height()-120,
+            width=90, height=60,button_color =(65,65,65),text_size_factor=3,
             button_highlighted_color=(95,95,95),
-            text_color=(255,255,255), button_border_radius=7,
+            text_color=(255,255,255), button_border_radius=4,
             callback=self.start_game
         )
 
         editor_button = Button(
-            text="Level Editor",x=25,y=self.screen.get_height()-50,button_color =(55,55,55),text_size_factor=2,
+            text="Editor",x=25,y=self.screen.get_height()-50,
+            width=90, height=35,
+            button_color =(55,55,55),text_size_factor=2,
             button_highlighted_color=(95,95,95),
             text_color=(255,255,255), button_border_radius=7,
             callback=self.start_editor
@@ -168,7 +194,7 @@ class Editor:
         self.fps = frame_rate
         self.running = False
         self.background_color = (56,56,56)
-    
+
     def kill(self) -> None:
         self.running = False
         Menu(self.screen, self.fps).run()
@@ -180,30 +206,32 @@ class Editor:
 
         self.screen.fill(self.background_color)
 
-        editor_title = Font().render("Level Editor", size_factor=1,text_color=(255,255,255))
+        pixel_text =  Font().render("- Pixel -", size_factor=2,text_color=(255,255,255))
+        editor_text = Font().render("Art Editor", size_factor=2,text_color=(255,255,255))
 
-        toolbar_frame = pygame.draw.rect(
+        options_frame = pygame.draw.rect(
             self.screen,(64,64,64),
-            (10,55,self.screen.get_width()//5+10,
+            (10,55,100,
             self.screen.get_height()-80),
             border_radius=15
         )
 
-        file_button = Button(
-            width=45,height=25,
-            text="File",button_color= (56,56,56),
+        new_button = Button(
+            x=15,y=60,
+            width=90,height=40,
+            text="New",button_color= (56,56,56),
             button_highlighted_color=(80,80,80),
             text_size_factor=2,text_color=(255,255,255),
-            callback=self.kill
+            button_border_radius=7,callback=self.kill
         )
 
-        edit_button = Button(
-            x=45,y=0,
-            width=48,height=25,
-            text="Edit",button_color= (56,56,56),
+        open_button = Button(
+            x=15,y=105,
+            width=90,height=40,
+            text="Open",button_color= (56,56,56),
             button_highlighted_color=(80,80,80),
             text_size_factor=2,text_color=(255,255,255),
-            callback=self.kill
+            button_border_radius=7,callback=self.kill
         )
 
         exit_button = Button(
@@ -219,10 +247,11 @@ class Editor:
             deltatime = 0
             last_time = time.time()
 
-            self.screen.blit(editor_title, (2,self.screen.get_rect().bottom-10))
+            self.screen.blit(pixel_text, (19,self.screen.get_rect().top+5))
+            self.screen.blit(editor_text, (10,self.screen.get_rect().top+25))
+            new_button.update(self.screen)
+            open_button.update(self.screen)
             exit_button.update(self.screen)
-            file_button.update(self.screen)
-            edit_button.update(self.screen)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -232,8 +261,6 @@ class Editor:
             pygame.display.flip()
             deltatime = self.fps - (time.time()-last_time)
             self.clock.tick(deltatime)
-
-
 
 def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     """Gets an outline from mask of surface
@@ -256,4 +283,4 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     return surface_copy
 
 if __name__ == "__main__":
-    Menu(Window(820,590).screen,60).run()
+    Menu(Window(1280,720).screen,60).run()

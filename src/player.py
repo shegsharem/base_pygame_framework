@@ -1,20 +1,21 @@
 """ python 3.12.1 """
-from pygame import sprite, image, mask, transform
+import pygame
 
-class Player(sprite.Sprite):
+class Player(pygame.Sprite):
     """Player class for game"""
-    def __init__(self, start_position:tuple=(0,0),
+    def __init__(self,
+                 start_position:tuple=(0,0),
                  image_path:str=None,
                  number_of_sprites:int=1) -> None:
         super().__init__()
-        self.position = start_position
+        self.position = pygame.Vector2(start_position)
         self.sprite_list = []
         self.sprite_number = 0
 
         for i in range(number_of_sprites):
             self.sprite_list.append(image_path + str(i) + '.png')
 
-        self.image = image.load(self.sprite_list[self.sprite_number]).convert_alpha()
+        self.image = pygame.image.load(self.sprite_list[self.sprite_number]).convert_alpha()
         self.rect = self.image.get_rect()
 
         self.mask = None
@@ -34,7 +35,7 @@ class Player(sprite.Sprite):
             sprite_number (int): sprite number in list
         """
         self.sprite_number = sprite_number
-        self.image = image.load(self.sprite_list[self.sprite_number]).convert_alpha()
+        self.image = pygame.image.load(self.sprite_list[self.sprite_number]).convert_alpha()
 
     def get_player_mask(self) -> None:
         """Get mask of player sprite and draw to surface
@@ -42,7 +43,7 @@ class Player(sprite.Sprite):
         Returns:
             (pygame.mask): mask image of player
         """
-        return mask.from_surface(self.image)
+        return pygame.mask.from_surface(self.image)
 
     def draw(self, surface, flipped:bool=False, player_mask:bool=False) -> None:
         """Draws player on surface
@@ -52,7 +53,7 @@ class Player(sprite.Sprite):
         """
         self.change_sprite_number(self.sprite_number)
         if flipped:
-            self.image = transform.flip(self.image,1,0)
+            self.image = pygame.transform.flip(self.image,1,0)
         if player_mask:
             surface.blit(self.get_player_mask().to_surface(), self.position)
         else:

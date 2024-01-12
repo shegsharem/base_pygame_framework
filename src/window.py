@@ -12,7 +12,12 @@ class Window:
             screen_height (int): Height of game window
             frame_rate (int, optional): Target framerate (FPS). Defaults to 60.
         """
-        pygame.init()
+        #pygame.init()
         self.width = screen_width
         self.height = screen_height
-        self.screen = pygame.display.set_mode((self.width, self.height),pygame.NOFRAME)
+
+        self.screen = pygame.display.set_mode(
+            (self.width,
+             self.height),
+             pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.NOFRAME
+        )
