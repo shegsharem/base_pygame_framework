@@ -10,14 +10,160 @@ from src.font import Font
 from random import randint
 from src.window import Window
 
+class Level:
+    """Level class. Block sprites shall be 5x5px"""
+    def __init__(self, level_map:list) -> None:
+        super().__init__()
+        self.level_map = level_map
+        self.group = pygame.sprite.Group()
+
+        for row_index, row in enumerate(self.level_map):
+            for col_index, cell in enumerate(row):
+                x = -10 + int(col_index*10)
+                y = -10 + int(row_index*10)
+
+                # Dirt
+                if cell == "D":
+                    self.terrain = pygame.sprite.Sprite()
+                    self.terrain.image = pygame.Surface((10,10))
+                    self.terrain.rect = self.terrain.image.get_rect().move(x,y)
+                    self.group.add(self.terrain)
+
+    def update(self, screen:pygame.Surface):
+        for sprite in self.group:
+            screen.blit(sprite.image, sprite.rect)
+
+
+class Player(pygame.sprite.Sprite):
+    """Player class"""
+    def __init__(self,position:tuple) -> None:
+        super().__init__()
+        self.image = pygame.transform.scale_by(
+            pygame.image.load('assets/images/circle.png').convert_alpha(),
+            factor=3
+        )
+
+        self.position = pygame.Vector2(position)
+        self.velocity = pygame.Vector2(0,0)
+
+        self.rect = self.image.get_rect()
+        self.outline = get_mask_outline(self.image, (1,1))
+        self.outline_rect = self.outline.get_rect()
+
+        # Player flags #############
+        self.touching_ground = False
+        self.double_jump = True
+        self.moving_x = False
+        ############################
+
+        # Constants ######
+        self.gravity_value = 9
+        self.jump_speed = -1200
+        self.friction = 5
+        self.movement_speed = 500
+        ##################
+
+    def check_collisions(self, sprite_group:pygame.sprite.Group) -> pygame.Rect | None:
+        """Returns: pygame.rect: rect of collided sprite"""
+
+        collision = pygame.sprite.spritecollide(self, sprite_group, False)
+        for sprite_found in collision:
+            return sprite_found.rect
+
+    def gravity(self, velocity:pygame.Vector2, gravity:int) -> pygame.Vector2:
+        """Applies gravity to player"""
+        return pygame.Vector2(velocity.x,velocity.y+gravity)
+
+    def jump(self) -> None:
+        """Make player jump"""
+        if self.touching_ground:
+            self.velocity.y = self.jump_speed
+            self.double_jump = True
+            self.touching_ground = False
+
+        elif not self.touching_ground and self.double_jump:
+            self.velocity.y = self.jump_speed
+            self.double_jump = False
+
+    def left(self) -> None:
+        """Move player left"""
+        self.velocity.x = -self.movement_speed
+        self.moving_x = True
+
+    def right(self) -> None:
+        """Move player right"""
+        self.velocity.x = self.movement_speed
+        self.moving_x = True
+
+    def move(self, position:pygame.Vector2,
+              velocity:pygame.Vector2) -> None:
+        """Change player position by a given velocity (pixels)"""
+        return position + velocity
+
+    def update(
+        self,surface:pygame.Surface,
+        dt:float,level:pygame.sprite.Group=None) -> None:
+        """Update player position and draw on surface.
+        Tries rendering next frame and corrects for collisions.
+        Args:
+            dt (float): time difference between frames (ms/frame)
+        """
+
+        if self.touching_ground and not self.moving_x:
+            # Friction
+            if bool(self.velocity.x // 1):
+                if abs(self.velocity.x) < self.friction:
+                    self.velocity.x = 0
+                elif self.velocity.x > 0:
+                    self.velocity.x -= self.friction
+                elif self.velocity.x < 0:
+                    self.velocity.x += self.friction
+
+        self.rect.bottomright = self.move(self.position, self.velocity*dt)
+
+        if level:
+            collision = self.check_collisions(level)
+            if collision:
+                if self.rect.bottom>collision.top and self.velocity.y<0:
+                    self.rect.bottom = collision.top
+                    self.touching_ground = True
+                    self.position.y =  self.rect.centery
+                    self.velocity.y = 0
+
+                elif self.rect.top>collision.bottom and self.velocity.y>0:
+                    self.rect.top = collision.bottom
+                    self.position.y =  self.rect.centery
+                    self.velocity.y = 0
+
+                elif self.rect.right>collision.left and self.velocity.x<0:
+                    self.rect.right = collision.left
+                    self.position.x =  self.rect.centerx
+                    self.velocity.x = 0
+
+                elif self.rect.left<collision.right and self.velocity.x>0:
+                    self.rect.left = collision.right
+                    self.position.x =  self.rect.centerx
+                    self.velocity.x = 0
+            else:
+                self.position = self.move(self.position, self.velocity*dt)
+
+            surface.blit(self.image, self.rect)
+
+
+        else:
+            self.position = self.move(self.position, self.velocity*dt)
+            surface.blit(self.image, self.rect)
+        
+        print(self.position, self.rect)
+
 class Game:
     """Game class"""
     def __init__(self, surface:pygame.Surface, frame_rate:int=60) -> None:
         """Initialize instance of game
 
         Args:
-            surface (pygame.Surface): The window surface to be used
-            frame_rate (int, optional): Target framerate (FPS). Defaults to 60.
+            surface: Surface to draw on.
+            frame_rate: Framerate target
         """
         self.screen = surface
         self.clock = pygame.time.Clock()
@@ -25,8 +171,7 @@ class Game:
         self.fps = frame_rate
         self.running = False
 
-        #self.player = Player((10,10), "data/images/playerframes/player", 7)
-        #self.player_position = (90,90)
+        self.level_map = list(open('level.txt'))
 
     def __str__(self) -> str:
         return f'The frame rate is set to {self.fps}.'
@@ -35,21 +180,38 @@ class Game:
         """Run game"""
         self.running = True
         pygame.event.clear() # clear event queue
-        self.screen.fill((0,0,0))
-        self.player = Player()
-
+        background = Level(self.level_map)
+        player = Player((0,0))
 
         #sample = pygame.transform.scale(pygame.image.load('assets/images/dvd.png').convert_alpha(), (200,200))
         #sample_mask = get_mask(sample)
         #sample_rect = sample_mask.get_rect()
         #sample_rect_pos = pygame.Vector2(sample_rect.center)
 #
-        #sample.fill((255,255,255),special_flags=pygame.BLEND_RGB_MAX)
+        player.image.fill((100,100,100),special_flags=pygame.BLEND_RGB_MAX)
         #speed = pygame.Vector2(200, 200)
 #
         last_time = time.time()
 #
         while self.running:
+            player_velocity_value = Font().render(
+                "Velocity = " + str(player.velocity),
+                size_factor=1,
+                text_color=(0,0,0)
+            )
+
+            player_position_value = Font().render(
+                "Position: " + str(player.position),
+                size_factor=1,
+                text_color=(0,0,0)
+            )
+
+            player_touching_ground = Font().render(
+                "Touching ground = " + str(player.touching_ground),
+                size_factor=1,
+                text_color=(0,0,0)
+            )
+
             dt = time.time() - last_time
             last_time = time.time()
 #
@@ -82,35 +244,36 @@ class Game:
                         self.running = False
                         Menu(self.screen).run()
 
-            self.player.update(self.screen)
+                    if event.key == pygame.K_a:
+                        player.left()
+
+                    if event.key == pygame.K_d:
+                        player.right()
+
+                    if event.key == pygame.K_s:
+                        player.velocity.y = 500
+
+                    if event.key == pygame.K_w:
+                        player.jump()
+
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_a:
+                        player.moving_x = False
+
+                    if event.key == pygame.K_d:
+                        player.moving_x = False
+
+
+
+            self.screen.fill((200,200,200))
+            background.update(self.screen)
+            pygame.draw.rect(self.screen,(0,0,0), player.rect,1)
+            player.update(self.screen,dt,background.group)
+            self.screen.blit(player_velocity_value, (2,2))
+            self.screen.blit(player_position_value, (2,10))
+            self.screen.blit(player_touching_ground, (2,18))
 
             pygame.display.flip()
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self) -> None:
-        super().__init__()
-        self.position = pygame.Vector2(0,0)
-        self.velocity = pygame.Vector2(0,0)
-
-        self.image = pygame.transform.scale_by(
-            pygame.image.load('assets/images/circle.png').convert_alpha(),
-            4
-        )
-
-        self.rect = self.image.get_rect()
-        
-
-        self.outline = get_mask_outline(self.image, (1,1))
-        self.outline_rect = self.outline.get_rect()
-
-        #self.image.fill((100,100,100),special_flags=pygame.BLEND_RGB_MAX)
-        
-
-    def update(self, surface:pygame.Surface):
-        self.rect.move(self.velocity)
-        self.outline_rect.move(self.velocity)
-        surface.blit(self.outline, (0,0))
-        surface.blit(self.image, (0,0))
 
 class Menu:
     """Game menu"""
@@ -125,7 +288,7 @@ class Menu:
     def start_game(self) -> None:
         self.running = False
         Game(self.screen, self.fps).run()
-    
+
     def start_editor(self):
         self.running = False
         Editor(self.screen, self.fps).run()
