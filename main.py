@@ -37,7 +37,8 @@ class Level:
         for sprite in self.group:
             screen.blit(sprite.image, sprite.rect)
 
-class Player(pygame.sprite.Sprite):
+
+class Player(pygame.sprite.Sprite):#
     """Player class"""
     def __init__(self) -> None:
         super().__init__()
@@ -62,7 +63,7 @@ class Player(pygame.sprite.Sprite):
         ############################
 
         # Constants ######
-        self.gravity = 5
+        self.gravity = 3
         self.jump_speed = -600
         self.friction = 3
         self.movement_speed = 400
@@ -105,7 +106,7 @@ class Player(pygame.sprite.Sprite):
         collision_list = []
         collision_types = {'top': False,'bottom': False,'right': False,'left': False}
 
-        self.position += (self.velocity*dt)
+        self.position += (self.velocity)
         self.rect.x = round(self.position.x)
         self.rect.y = round(self.position.y)
 
@@ -168,7 +169,6 @@ class Player(pygame.sprite.Sprite):
         pygame.draw.rect(surface, (200,200,200), self.outline_rect)
         surface.blit(self.image, self.rect)
 
-
 class Game:
     """Game class"""
     def __init__(self, surface:pygame.Surface, frame_rate:int=60) -> None:
@@ -180,45 +180,22 @@ class Game:
         """
         self.screen = surface
         self.clock = pygame.time.Clock()
-        self.time = time.time()
         self.fps = frame_rate
         self.running = False
 
         self.level_map = list(open('level.txt'))
-
-    def __str__(self) -> str:
-        return f'The frame rate is set to {self.fps}.'
 
     def run(self) -> None:
         """Run game"""
         self.running = True
         pygame.event.clear() # clear event queue
         background = Level(self.level_map)
-        player = Player()
+        fps = self.fps
 
-        last_time = time.time()
+        pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP])
 
         while self.running:
-            dt = time.time() - last_time
-            last_time = time.time()
-
-            player_velocity_value = Font().render(
-                "Velocity = " + str(player.velocity),
-                size_factor=2,
-                text_color=(0,0,0)
-            )
-
-            player_position_value = Font().render(
-                "Position: " + str(player.position),
-                size_factor=2,
-                text_color=(0,0,0)
-            )
-
-            player_touching_ground = Font().render(
-                "Touching ground = " + str(player.touching_ground),
-                size_factor=2,
-                text_color=(0,0,0)
-            )
+            previous_time = time.time()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -231,33 +208,30 @@ class Game:
                         Menu(self.screen).run()
 
                     if event.key == pygame.K_a:
-                        player.left()
+                        pass
 
                     if event.key == pygame.K_d:
-                        player.right()
+                        pass
 
                     if event.key == pygame.K_s:
-                        player.velocity.y = 500
+                        pass
 
                     if event.key == pygame.K_w:
-                        player.jump()
+                        pass
 
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_a:
-                        player.moving_x = False
+                        pass
 
                     if event.key == pygame.K_d:
-                        player.moving_x = False
+                        pass
 
             self.screen.fill((200,200,200))
             background.update(self.screen)
-            pygame.draw.rect(self.screen,(0,0,0), player.rect,1)
-            player.update(self.screen,dt,background.group)
-            self.screen.blit(player_velocity_value, (2,2))
-            self.screen.blit(player_position_value, (2,20))
-            self.screen.blit(player_touching_ground, (2,40))
 
             pygame.display.flip()
+            dt = time.time() - previous_time
+            self.clock.tick(fps-dt)
 
 class Menu:
     """Game menu"""
@@ -430,4 +404,4 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     return surface_copy
 
 if __name__ == "__main__":
-    Menu(Window(1280,720).screen,165).run()
+    Game(Window(1280,720).screen,60).run()
