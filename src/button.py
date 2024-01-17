@@ -1,6 +1,6 @@
 """ python 3.12.1 """
 import pygame
-from src.font import Font
+from font import Font
 
 class Button:
     """Simple button class."""
