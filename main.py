@@ -6,7 +6,6 @@ import pygame
 from pygame.locals import *
 from src.button import Button, get_mask
 from src.font import Font
-#from src.player import Player
 from random import randint
 from src.window import Window
 from math import floor
@@ -63,10 +62,10 @@ class Player(pygame.sprite.Sprite):#
         ############################
 
         # Constants ######
-        self.gravity = 3
-        self.jump_speed = -600
+        self.gravity = 0.75
+        self.jump_speed = -15
         self.friction = 3
-        self.movement_speed = 400
+        self.movement_speed = 15
         ##################
 
     def jump(self) -> None:
@@ -74,7 +73,7 @@ class Player(pygame.sprite.Sprite):#
         if self.touching_ground:
             self.velocity.y = self.jump_speed
             self.double_jump = True
-        
+
         elif not self.touching_ground and self.double_jump:
             self.velocity.y = self.jump_speed
             self.double_jump = False
@@ -95,7 +94,7 @@ class Player(pygame.sprite.Sprite):#
         return position + velocity
 
     def update(self,surface:pygame.Surface,
-        dt:float,level:pygame.sprite.Group=None) -> None:
+        level:pygame.sprite.Group=None) -> None:
         """Update player position and draw on surface.
         Tries rendering next frame and corrects for collisions.
         Args:
@@ -105,6 +104,8 @@ class Player(pygame.sprite.Sprite):#
         # Collisions ################################################################
         collision_list = []
         collision_types = {'top': False,'bottom': False,'right': False,'left': False}
+
+        self.position = self.rect.topleft
 
         self.position += (self.velocity)
         self.rect.x = round(self.position.x)
@@ -135,6 +136,8 @@ class Player(pygame.sprite.Sprite):#
         ################################################################################
 
         print(collision_types)
+        print(self.position)
+        print(self.velocity,"\n")
 
         if collision_types['left']:
             self.velocity.x = 0
@@ -147,11 +150,10 @@ class Player(pygame.sprite.Sprite):#
             self.velocity.y =0
             if collision_types['right']:
                 self.velocity.x = 0
-        
+
         if not collision_types['bottom']:
             self.touching_ground = False
             self.velocity.y += (self.gravity)
-
 
         #Friction
         if self.touching_ground:
@@ -182,7 +184,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.fps = frame_rate
         self.running = False
-
+        self.player = Player()
         self.level_map = list(open('level.txt'))
 
     def run(self) -> None:
@@ -217,7 +219,7 @@ class Game:
                         pass
 
                     if event.key == pygame.K_w:
-                        pass
+                        self.player.jump()
 
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_a:
@@ -228,7 +230,7 @@ class Game:
 
             self.screen.fill((200,200,200))
             background.update(self.screen)
-
+            self.player.update(self.screen,background.group)
             pygame.display.flip()
             dt = time.time() - previous_time
             self.clock.tick(fps-dt)
