@@ -10,12 +10,11 @@ pygame.init()
 screen = pygame.display.set_mode((1280,720),pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.NOFRAME)
 
 clock = pygame.time.Clock()
-player = Player()
+#player = Player() when player is external file
 level_map = list(open('level.txt'))
 background = Level(level_map)
 running = 0
-FPS = 60
-
+FPS = 10
 
 class Player(pygame.sprite.Sprite):#
     """Player class"""
@@ -27,7 +26,8 @@ class Player(pygame.sprite.Sprite):#
         )
 
         self.velocity = pygame.Vector2(0,0)
-        self.position = pygame.Vector2(0,0)
+        self.pre_position = [0,0]
+        self.delta_position = [0,0]
 
         self.rect = self.image.get_rect()
         self.outline = get_mask_outline(self.image, (1,1))
@@ -42,7 +42,7 @@ class Player(pygame.sprite.Sprite):#
         ############################
 
         # Constants ######
-        self.gravity = 0.75
+        self.gravity = 1
         self.jump_speed = -15
         self.friction = 3
         self.movement_speed = 15
@@ -73,6 +73,38 @@ class Player(pygame.sprite.Sprite):#
         """Change player position by a given velocity (pixels)"""
         return position + velocity
 
+    def handle_collisions(self,rect:pygame.Rect,
+                          level:pygame.sprite.Group) -> list[pygame.Rect,dict[str, bool]] | None:
+        """Check collisions and handle accordingly"""
+        collision_list = sprite_group_collision(rect, level)
+
+        if collision_list:
+            collision_types = {'top': False,'bottom': False,
+                               'right': False,'left': False}
+
+            # Check y direction collisions #############
+            for sprite_rect in collision_list:
+                if self.velocity.y > 0:
+                    rect.bottom = sprite_rect.top
+                    collision_types['bottom'] = True
+
+                elif self.velocity.y < 0:
+                    rect.top = sprite_rect.bottom
+                    collision_types['top'] = True
+
+            # Check x direction collisions #############
+            for sprite_rect in collision_list:
+                if self.velocity.x > 0:
+                    #self.rect.right = sprite_rect.left
+                    collision_types['right'] = True
+
+                elif self.velocity.x < 0:
+                    #self.rect.left = sprite_rect.right
+                    collision_types['left'] = True
+
+            return [rect,collision_types]
+        return None
+
     def update(self,surface:pygame.Surface,
         level:pygame.sprite.Group=None) -> None:
         """Update player position and draw on surface.
@@ -80,60 +112,56 @@ class Player(pygame.sprite.Sprite):#
         Args:
             dt (float): time difference between frames (ms/frame)
         """
+        self.pre_position = [self.rect.x,self.rect.y] # using for delta position
 
-        # Collisions ################################################################
-        collision_list = []
-        collision_types = {'top': False,'bottom': False,'right': False,'left': False}
+        # Check next frame for collision #####################
+        future_rect = pygame.Rect(
+            self.pre_position[0],
+            self.pre_position[1],
+            self.rect.width+self.velocity.x,
+            self.rect.height+self.velocity.y
+        )
 
-        self.position = self.rect.topleft
+        # Setting position to check collision
 
-        self.position += (self.velocity)
-        self.rect.x = round(self.position.x)
-        self.rect.y = round(self.position.y)
+        print(future_rect)
 
-        for sprite in level:
-            if self.rect.colliderect(sprite.rect):
-                collision_list.append(sprite.rect)
+        collision = self.handle_collisions(future_rect, level)
+        ######################################################
 
-        # Check y direction collisions #############
-        for sprite_rect in collision_list:
-            if self.velocity.y >= 0:
-                self.rect.bottom = sprite_rect.top
-                self.position = self.rect.topleft
-                collision_types['bottom'] = True
+        if collision:
+            print(collision[0])
+            self.rect = collision[0]
 
-            elif self.velocity.y < 0:
-                self.rect.top = sprite_rect.bottom
-                self.position = self.rect.topleft
-                collision_types['top'] = True
-
-        # Check x direction collisions #############
-            elif self.velocity.x > 0:
-                #self.rect.right = sprite_rect.left
-                self.position = self.rect.topleft
-                collision_types['right'] = True
-
-            elif self.velocity.x < 0:
-                #self.rect.left = sprite_rect.right
-                self.position = self.rect.topleft
-                collision_types['left'] = True
-        ################################################################################
-
-        if collision_types['left']:
-            self.velocity.x = 0
-        
-        if collision_types['right']:
-            self.velocity.x = 0
-
-        if collision_types['bottom']:
-            self.touching_ground = True
-            self.velocity.y =0
-            if collision_types['right']:
+            if collision[1]['left']:
                 self.velocity.x = 0
 
-        if not collision_types['bottom']:
-            self.touching_ground = False
-            self.velocity.y += (self.gravity)
+            if collision[1]['right']:
+                self.velocity.x = 0
+
+            if collision[1]['bottom']:
+                self.touching_ground = True
+                self.velocity.y =0
+                if collision[1]['right']:
+                    self.velocity.x = 0
+
+            if not collision[1]['bottom']:
+                self.touching_ground = False
+
+        elif not collision:
+            self.rect.x += self.velocity.x
+            self.rect.y += self.velocity.y
+
+        pygame.draw.rect(surface, (0,0,0), self.rect,1)
+        surface.blit(self.image, self.rect)
+        pygame.draw.rect(surface, (255,0,0), future_rect, 1)
+
+        print(self.rect.y)
+        print(future_rect.y)
+        print(self.velocity,"\n")
+
+        # Gravity
+        self.velocity.y += self.gravity
 
         #Friction
         if self.touching_ground:
@@ -146,92 +174,29 @@ class Player(pygame.sprite.Sprite):#
                 elif self.velocity.x < 0:
                     self.moving_left = True
                     self.velocity.x += self.friction
-        
-        print(collision_types)
-        print(self.position)
-        print(self.velocity,"\n")
 
 
-        pygame.draw.rect(surface, (200,200,200), self.outline_rect)
-        surface.blit(self.image, self.rect)
+def rect_collision(rect1:pygame.Rect,rect2:pygame.Rect) -> bool:
+    """Checks for single collision"""
+    if rect1.colliderect(rect2):
+        return True
+    return False
 
-class Game:
-    """Game class"""
-    def __init__(self, surface:pygame.Surface, frame_rate:int=60) -> None:
-        """Initialize instance of game
+def sprite_group_collision(rect:pygame.Rect,sprite_group:pygame.sprite.Group) -> list | None:
+    """Check rect collision with any sprite in sprite_group
 
-        Args:
-            surface: Surface to draw on.
-            frame_rate: Framerate target
-        """
-        self.screen = surface
-        self.clock = pygame.time.Clock()
-        self.fps = frame_rate
-        self.running = False
-        self.player = Player()
-        self.level_map = list(open('level.txt'))
+    Returns:
+        list: Rects of sprite_group that have been collided with
+    """
+    collision_list = []
 
-    def run(self) -> None:
-        """Run game"""
-        self.running = True
-        pygame.event.clear() # clear event queue
-        background = Level(self.level_map)
-        fps = self.fps
+    for sprite in sprite_group:
+        if rect.colliderect(sprite.rect):
+            collision_list.append(sprite.rect)
 
-        pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP])
-
-        while self.running:
-            previous_time = time.time()
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
-                        pygame.quit()
-                        sys.exit()
-
-                    if event.key == pygame.K_a:
-                        pass
-
-                    if event.key == pygame.K_d:
-                        pass
-
-                    if event.key == pygame.K_s:
-                        pass
-
-                    if event.key == pygame.K_w:
-                        self.player.jump()
-
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_a:
-                        pass
-
-                    if event.key == pygame.K_d:
-                        pass
-
-            self.screen.fill((200,200,200))
-            background.update(self.screen)
-            self.player.update(self.screen,background.group)
-            pygame.display.flip()
-            dt = time.time() - previous_time
-            self.clock.tick(fps-dt)
-
-def main() -> None:
-    """Main game loop"""
-    player = Player()
-    pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP])
-
-    running = 1
-    
-
-    while running:
-
-
-
+    if len(collision_list) > 0:
+        return collision_list
+    return None
 
 def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     """Gets an outline from mask of surface
@@ -253,5 +218,35 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
     surface_copy.blit(mask_surface, (offset[0],offset[1]+1))
     return surface_copy
 
+def main() -> None:
+    """Main game loop"""
+    player = Player()
+    pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP])
+    running = 1
+
+    while running:
+        previous_time = time.time()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = 0
+                    pygame.quit()
+                    sys.exit()
+
+                if event.key == pygame.K_w or pygame.K_UP:
+                    player.jump()
+
+        screen.fill((200,200,200))
+        background.update(screen)
+        player.update(screen,background.group)
+        pygame.display.flip()
+        dt = time.time() - previous_time
+        clock.tick(FPS-dt)
+
 if __name__ == "__main__":
-    Game(screen,60).run()
+    main()
