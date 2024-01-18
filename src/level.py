@@ -1,5 +1,6 @@
 """Level loader"""
 from pygame import sprite, Surface
+from pygame.locals import SRCALPHA
 
 class Level:
     """Level class. Block sprites shall be 5x5px"""
@@ -22,6 +23,18 @@ class Level:
                 if cell == " ":
                     pass
 
-    def update(self, screen:Surface):
+    def render(self, screen:Surface) -> Surface:
+        """Render level to pygame surface, relative to game window size
+
+        Args:
+            screen (Surface): Game window
+
+        Returns:
+            Surface: Rendered level
+        """
+        level_surface = Surface((screen.get_width(),screen.get_height()),SRCALPHA)
         for tile in self.group:
-            screen.blit(tile.image, tile.rect)
+            level_surface.blit(tile.image, tile.rect)
+        #level_surface.convert_alpha()
+        return level_surface
+

@@ -14,7 +14,7 @@ clock = pygame.time.Clock()
 level_map = list(open('level.txt'))
 background = Level(level_map)
 running = 0
-FPS = 10
+FPS = 60
 
 class Player(pygame.sprite.Sprite):#
     """Player class"""
@@ -221,8 +221,15 @@ def get_mask_outline(surface:pygame.Surface, offset:tuple) -> pygame.Surface:
 def main() -> None:
     """Main game loop"""
     player = Player()
+    player_mask = get_mask_outline(player.image,(1,1))
+    player_mask.convert_alpha()
     pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP])
     running = 1
+    screen.fill((255,255,255))
+    level_surface = background.render(screen)
+    level_mask = pygame.mask.from_surface(level_surface,threshold=127)
+    #level_mask.invert()
+    level_mask_surface = level_mask.to_surface()
 
     while running:
         previous_time = time.time()
@@ -241,9 +248,13 @@ def main() -> None:
                 if event.key == pygame.K_w or pygame.K_UP:
                     player.jump()
 
-        screen.fill((200,200,200))
-        background.update(screen)
+        screen.fill((255,255,255))
+        
+        screen.blit(level_surface,(0,0))
+        #screen.blit(level_mask_surface,(0,0))
+        #screen.blit(player_mask,(player.rect.x,player.rect.y-1))
         player.update(screen,background.group)
+        
         pygame.display.flip()
         dt = time.time() - previous_time
         clock.tick(FPS-dt)
