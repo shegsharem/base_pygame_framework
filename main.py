@@ -25,6 +25,7 @@ class Player(pygame.sprite.Sprite):#
         )
 
         self.velocity = pygame.Vector2(0,0)
+        self.acceleration = pygame.Vector2(0,0)
         self.pre_position = [0,0]
         self.delta_position = [0,0]
 
@@ -41,8 +42,8 @@ class Player(pygame.sprite.Sprite):#
         ############################
 
         # Constants ######
-        self.gravity = 1
-        self.jump_speed = -15
+        self.terminal_velocity = 80
+        self.jump_speed = -40
         self.friction = 3
         self.movement_speed = 15
         ##################
@@ -141,6 +142,7 @@ class Player(pygame.sprite.Sprite):#
             if collision[1]['bottom']:
                 self.touching_ground = True
                 self.velocity.y =0
+                self.acceleration.y = 0
                 if collision[1]['right']:
                     self.velocity.x = 0
 
@@ -160,7 +162,9 @@ class Player(pygame.sprite.Sprite):#
         print(self.velocity,"\n")
 
         # Gravity
-        self.velocity.y += self.gravity
+        if self.velocity.y < self.terminal_velocity:
+            self.acceleration.y += 1
+            self.velocity.y += self.acceleration.y
 
         #Friction
         if self.touching_ground:
