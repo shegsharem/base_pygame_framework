@@ -1,5 +1,5 @@
 """Level loader"""
-from pygame import sprite, Surface
+from pygame import sprite, Surface, mask
 from pygame.locals import SRCALPHA
 
 class Level:
@@ -23,6 +23,7 @@ class Level:
                 if cell == " ":
                     pass
 
+
     def render(self, screen:Surface) -> Surface:
         """Render level to pygame surface, relative to game window size
 
@@ -38,3 +39,32 @@ class Level:
         #level_surface.convert_alpha()
         return level_surface
 
+    def render_level_mask_outlines(self, screen: Surface):
+        top_surfaces = Surface((screen.get_width(),screen.get_height()),SRCALPHA)
+        bottom_surfaces = Surface((screen.get_width(),screen.get_height()),SRCALPHA)
+        left_surfaces = Surface((screen.get_width(),screen.get_height()),SRCALPHA)
+        right_surfaces = Surface((screen.get_width(),screen.get_height()),SRCALPHA)
+
+        level = self.render(screen)
+        surface_mask = mask.from_surface(level)
+        surface_mask.invert()
+        mask_to_surface = surface_mask.to_surface()
+
+        top_surfaces.blit(mask_to_surface,(0,-1))
+        top_surfaces.blit(level,(0,0))
+        top_surfaces.convert_alpha()
+
+        bottom_surfaces.blit(mask_to_surface,(0,1))
+        bottom_surfaces.blit(level,(0,0))
+        bottom_surfaces.convert_alpha()
+
+        left_surfaces.blit(mask_to_surface,(-1,0))
+        left_surfaces.blit(level,(0,0))
+        #left_surfaces.convert_alpha()
+
+        right_surfaces.blit(mask_to_surface,(1,0))
+        right_surfaces.blit(level,(0,0))
+        #right_surfaces.convert_alpha()
+
+
+        return (top_surfaces, bottom_surfaces, left_surfaces, right_surfaces)

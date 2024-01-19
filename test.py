@@ -2,9 +2,12 @@ import sys
 import time
 import pygame
 from pygame.locals import *
+from src.level import Level
 
 pygame.init()
 screen = pygame.display.set_mode((1280,720),pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.NOFRAME)
+level_map = list(open('level.txt'))
+background = Level(level_map)
 
 velocity = pygame.Vector2(0,-20)
 
@@ -32,7 +35,13 @@ def main() -> None:
     pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP])
     player = Player()
     running = 1
+
     screen.fill((255,255,255))
+
+    level_surface = background.render(screen)
+    level_collision_mask = background.render_level_mask_outlines(screen)
+
+    
 
     while running:
         previous_time = time.time()
@@ -52,6 +61,10 @@ def main() -> None:
                     velocity.y += 1
 
         screen.fill((200,200,200))
+
+        screen.blit(level_collision_mask[0],(10,-10))
+        screen.blit(level_surface,(0,0))
+
         player.draw(screen)
         velocity.x = 20
         velocity.y += 1
