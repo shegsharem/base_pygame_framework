@@ -253,7 +253,7 @@ def main() -> None:
         screen.blit(level_surface,(0,0))
         screen.blit(player.outline,player.rect)
         #screen.blit(player_mask,(player.rect.x,player.rect.y-1))
-        player.update(screen,background.group)
+        player.update(screen, background.group)
         
         pygame.display.flip()
         dt = time.time() - previous_time
