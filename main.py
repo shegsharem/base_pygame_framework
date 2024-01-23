@@ -13,6 +13,7 @@ clock = pygame.time.Clock()
 #player = Player() when player is external file
 level_map = list(open('level.txt'))
 background = Level(level_map)
+running = 0
 FPS = 60
 
 class Player(pygame.sprite.Sprite):#
@@ -25,12 +26,11 @@ class Player(pygame.sprite.Sprite):#
         )
 
         self.velocity = pygame.Vector2(0,0)
-        self.acceleration = pygame.Vector2(0,0)
         self.pre_position = [0,0]
         self.delta_position = [0,0]
 
         self.rect = self.image.get_rect()
-        self.outline = get_mask_outline(self.image, (0,0))
+        self.outline = get_mask_outline(self.image, (1,1))
         self.outline_rect = self.outline.get_rect()
 
         # Player flags #############
@@ -42,8 +42,8 @@ class Player(pygame.sprite.Sprite):#
         ############################
 
         # Constants ######
-        self.terminal_velocity = 80
-        self.jump_speed = -40
+        self.gravity = 1
+        self.jump_speed = -15
         self.friction = 3
         self.movement_speed = 15
         ##################
@@ -116,10 +116,10 @@ class Player(pygame.sprite.Sprite):#
 
         # Check next frame for collision #####################
         future_rect = pygame.Rect(
-            self.pre_position[0]+self.velocity.x,
-            self.pre_position[1]+self.velocity.y,
-            self.rect.width,
-            self.rect.height
+            self.pre_position[0],
+            self.pre_position[1],
+            self.rect.width+self.velocity.x,
+            self.rect.height+self.velocity.y
         )
 
         # Setting position to check collision
@@ -142,7 +142,6 @@ class Player(pygame.sprite.Sprite):#
             if collision[1]['bottom']:
                 self.touching_ground = True
                 self.velocity.y =0
-                self.acceleration.y = 0
                 if collision[1]['right']:
                     self.velocity.x = 0
 
@@ -162,9 +161,7 @@ class Player(pygame.sprite.Sprite):#
         print(self.velocity,"\n")
 
         # Gravity
-        if self.velocity.y < self.terminal_velocity:
-            self.acceleration.y += 1
-            self.velocity.y += self.acceleration.y
+        self.velocity.y += self.gravity
 
         #Friction
         if self.touching_ground:
@@ -230,6 +227,9 @@ def main() -> None:
     running = 1
     screen.fill((255,255,255))
     level_surface = background.render(screen)
+    level_mask = pygame.mask.from_surface(level_surface,threshold=127)
+    #level_mask.invert()
+    level_mask_surface = level_mask.to_surface()
 
     while running:
         previous_time = time.time()
@@ -248,12 +248,12 @@ def main() -> None:
                 if event.key == pygame.K_w or pygame.K_UP:
                     player.jump()
 
-        screen.fill((200,200,200))
+        screen.fill((255,255,255))
         
         screen.blit(level_surface,(0,0))
-        screen.blit(player.outline,player.rect)
+        #screen.blit(level_mask_surface,(0,0))
         #screen.blit(player_mask,(player.rect.x,player.rect.y-1))
-        player.update(screen, background.group)
+        player.update(screen,background.group)
         
         pygame.display.flip()
         dt = time.time() - previous_time

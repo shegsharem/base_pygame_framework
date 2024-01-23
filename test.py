@@ -164,7 +164,6 @@ def main() -> None:
 
         screen.blit(player_image, player_rect)
 
-        
         pygame.display.flip()
         dt = time.time() - previous_time
         clock.tick(FPS-dt)
