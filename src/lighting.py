@@ -1,5 +1,5 @@
 """Module for lighting and various visual effects in pygame"""
-from pygame import Surface, mask
+from pygame import Surface, mask, draw
 from pygame.locals import SRCALPHA
 
 def get_outline(surface:Surface) -> Surface:
@@ -23,3 +23,19 @@ def get_outline(surface:Surface) -> Surface:
 
     surface_outline.convert_alpha()
     return surface_outline
+
+def get_outline_basic(surface:Surface) -> Surface:
+    outline_surface = Surface(surface.get_size(),SRCALPHA)
+    outline_rect = surface.get_rect()
+
+    points = [
+        (outline_rect.x-1, outline_rect.y-1),
+        (outline_rect.width+1, outline_rect.y-1),
+        (outline_rect.width+1, outline_rect.height+1),
+        (outline_rect.x-1, outline_rect.height+1)
+    ]
+
+    draw.lines(outline_surface, (255,255,255,255), True, points,5)
+    
+    outline_surface.convert_alpha()
+    return outline_surface

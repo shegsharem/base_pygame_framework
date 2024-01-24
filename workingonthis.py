@@ -9,17 +9,18 @@ from src.deltatime import get_deltatime
 from src.player import Player
 from src.level import Level
 from src.collisions import intersecting_rect_with_sprite_group
-from src.lighting import get_outline
+from src.lighting import get_outline_basic
 
 pygame.init()
 
 screen = pygame.display.set_mode((1280,720))
 previous_time = get_deltatime()
 
-test_rect = Rectangle((0,0),(50,50))
+test_rect = Rectangle((0,0),(50,50), (0,0,0))
 test_rect2 = Rectangle((400,400),(100,100),(255,0,0))
 test_rect3 = Rectangle((0,0),(100,100),(255,255,0))
 
+test_rect_outline = get_outline_basic(test_rect.image)
 #player = Player()
 level_map = list(open('level.txt'))
 
@@ -72,9 +73,11 @@ while True:
     test_rect3.update(dt)
 
 
-    
     screen.blit(test_rect2.image,test_rect2.position)
     screen.blit(test_rect3.image,test_rect3.position)
+    screen.blit(test_rect_outline,test_rect.position)
+    print(test_rect_outline.get_rect())
+
     screen.blit(test_rect.image,test_rect.position)
     
     #screen.blit(player.image,player.position)
