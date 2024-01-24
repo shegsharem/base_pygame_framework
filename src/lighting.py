@@ -11,12 +11,12 @@ def get_outline(surface:Surface) -> Surface:
     :return: `new surface` with outline drawn
     :rtype: Surface
     """
-    outline_surface = Surface(surface.get_size(),SRCALPHA)
+    outline = Surface(surface.get_size(),SRCALPHA)
     outline_mask = mask.from_surface(surface)
     outline_masks = outline_mask.connected_components()
 
     for partial_mask in outline_masks:
         points = partial_mask.outline()
-        draw.lines(outline_surface, (255,255,255,255), True, points)
+        draw.lines(outline, (255,255,255,255), True, points)
 
-    return outline_surface
+    return outline
