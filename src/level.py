@@ -7,13 +7,13 @@ class Level:
     def __init__(self, level_map:list) -> None:
         self.level_map = level_map
         self.terrain_group = sprite.Group()
-        dirt = transform.scale(image.load("assets/images/dirt.png").convert_alpha(), (48,48))
-        grass = transform.scale(image.load("assets/images/grass.png").convert_alpha(), (48,48))
+        dirt = transform.scale(image.load("assets/images/dirt.png").convert_alpha(), (36,36))
+        grass = transform.scale(image.load("assets/images/grass.png").convert_alpha(), (36,36))
 
         for row_index, row in enumerate(self.level_map):
             for col_index, cell in enumerate(row):
-                x = -48 + int(col_index*48)
-                y = -48 + int(row_index*48)
+                x = -36 + int(col_index*36)
+                y = -36 + int(row_index*36)
 
                 # Dirt
                 if cell == "D":
