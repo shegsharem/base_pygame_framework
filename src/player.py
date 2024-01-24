@@ -1,5 +1,6 @@
 """Python 3.12.1"""
 from pygame import sprite, Vector2, transform, image
+from src.collisions import intersecting_rect_with_sprite_group
 
 class Player(sprite.Sprite):
     """Player Class"""
@@ -35,21 +36,23 @@ class Player(sprite.Sprite):
         for i in range(6):
             img = transform.scale_by(
                 image.load('assets/images/player/player'+str(i)+'.png').convert_alpha(),3)
-            self.player_sprites[i] = img, img.get_rect()
+            self.player_sprites[i] = img, img.get_bounding_rect()
         ###################################################################################
 
         self.image = self.player_sprites[self.sprite_number][0]
         self.rect = self.player_sprites[self.sprite_number][1]
 
-    def move(self, deltatime:float) -> None:
+    def move(self, deltatime:float, collidable_group:sprite.Group=None) -> None:
         """Move player
 
         :param deltatime: used for smooth motion
         :type deltatime: float
+        :param collidable_group: sprite group to collide with, defaults to None
+        :type collidable_group: pygame.sprite.Group, optional
         """
         # Gravity ############################
-        if not self.touching_ground:
-            self.acceleration.y = self.gravity
+        #if not self.touching_ground:
+        #    self.acceleration.y = self.gravity
         ######################################
 
         self.velocity += self.acceleration
@@ -90,4 +93,4 @@ class Player(sprite.Sprite):
                 self.image = self.player_sprites[self.sprite_number][0]
         ####################################################################
 
-        self.move(deltatime)
+        self.move(deltatime, collidable_group)
