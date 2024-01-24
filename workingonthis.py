@@ -15,16 +15,15 @@ pygame.init()
 screen = pygame.display.set_mode((1280,720))
 previous_time = get_deltatime()
 
-test_rect = Rectangle((10,10),(200,200))
-test_rect2 = Rectangle((10,10),(100,100),(255,0,0))
+test_rect = Rectangle((0,0),(50,50))
+test_rect2 = Rectangle((400,400),(100,100),(255,0,0))
+test_rect3 = Rectangle((0,0),(100,100),(255,255,0))
 
-
-test_circle = Circle((0,0),40,(0,9,0))
-player = Player()
+#player = Player()
 level_map = list(open('level.txt'))
 
 rect_collision_group = pygame.sprite.Group()
-rect_collision_group.add(test_rect2)
+rect_collision_group.add(test_rect2,test_rect3)
 collided_rect = None
 
 background = Level(level_map)
@@ -57,32 +56,33 @@ while True:
 
     input_processor()
 
-    screen.fill((0,0,0))
+    screen.blit(splashscreen,(0,0))
     mouse_pos = pygame.mouse.get_pos()
 
-    #test_rect.position = mouse_pos
-    test_rect2.position = (100,100)
-    test_circle.position = mouse_pos
-    player.position = mouse_pos
 
-    collided_rect = intersecting_rect_with_sprite_group(test_circle.rect, rect_collision_group)
+    test_rect.position = mouse_pos
+    
 
-    #test_rect.update(dt)
-    player.update(dt)
+    collided_rect = intersecting_rect_with_sprite_group(test_rect.rect, rect_collision_group)
+
+    test_rect.update(dt)
+    #player.update(dt)
     test_rect2.update(dt)
-    test_circle.update(dt)
+    test_rect3.update(dt)
 
 
-    #screen.blit(test_rect.image,test_rect.position)
+    
     screen.blit(test_rect2.image,test_rect2.position)
+    screen.blit(test_rect3.image,test_rect3.position)
+    screen.blit(test_rect.image,test_rect.position)
+    #screen.blit(player.image,player.position)
 
     if collided_rect:
         print(collided_rect)
         pygame.draw.rect(screen, (0,255,0), collided_rect)
 
 
-    screen.blit(test_circle.image,test_circle.position)
-    screen.blit(player.image,player.position)
+    
 
-    pygame.display.update([test_rect2, player, test_circle])
+    pygame.display.update([test_rect, test_rect2, test_rect3])
     pygame.display.flip()

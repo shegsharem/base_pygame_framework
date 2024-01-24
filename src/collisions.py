@@ -21,7 +21,7 @@ def intersecting_rect_with_sprite_group(rect:Rect, sprite_group:sprite.Group) ->
         return None
 
     x = max(max(r.x for r in checklist),rect.x)
-    width = min(min(r.right for r in checklist),rect.width) - x
+    width = min(min(r.width for r in checklist),rect.width) - x
     y = max(max(r.y for r in checklist),rect.y)
     height = min(min(r.bottom for r in checklist),rect.bottom) - y
 

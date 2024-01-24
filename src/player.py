@@ -51,8 +51,8 @@ class Player(sprite.Sprite):
         :type collidable_group: pygame.sprite.Group, optional
         """
         # Gravity ############################
-        #if not self.touching_ground:
-        #    self.acceleration.y = self.gravity
+        if not self.touching_ground:
+            self.acceleration.y = self.gravity
         ######################################
 
         self.velocity += self.acceleration
