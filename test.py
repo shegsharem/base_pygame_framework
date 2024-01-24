@@ -3,7 +3,7 @@ import time
 import pygame
 from pygame.locals import *
 from src.level import Level
-from src.outline import get_outline
+from lighting import get_outline
 
 pygame.init()
 screen = pygame.display.set_mode((1920,1080),pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.NOFRAME)

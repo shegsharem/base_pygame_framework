@@ -1,4 +1,4 @@
-"""Module for getting and using outlines of pygame surfaces"""
+"""Module for lighting and various visual effects in pygame"""
 from pygame import Surface, mask
 from pygame.locals import SRCALPHA
 

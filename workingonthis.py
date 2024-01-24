@@ -9,6 +9,7 @@ from src.deltatime import get_deltatime
 from src.player import Player
 from src.level import Level
 from src.collisions import intersecting_rect_with_sprite_group
+from src.lighting import get_outline
 
 pygame.init()
 
@@ -61,7 +62,7 @@ while True:
 
 
     test_rect.position = mouse_pos
-    
+
 
     collided_rect = intersecting_rect_with_sprite_group(test_rect.rect, rect_collision_group)
 
@@ -75,6 +76,7 @@ while True:
     screen.blit(test_rect2.image,test_rect2.position)
     screen.blit(test_rect3.image,test_rect3.position)
     screen.blit(test_rect.image,test_rect.position)
+    
     #screen.blit(player.image,player.position)
 
     if collided_rect:
