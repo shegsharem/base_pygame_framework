@@ -1,60 +1,93 @@
-""" python 3.12.1 """
-import pygame
+"""Python 3.12.1"""
+from pygame import sprite, Vector2, transform, image
 
-class Player(pygame.Sprite):
-    """Player class for game"""
-    def __init__(self,
-                 start_position:tuple=(0,0),
-                 image_path:str=None,
-                 number_of_sprites:int=1) -> None:
+class Player(sprite.Sprite):
+    """Player Class"""
+    def __init__(self, position:tuple=(0,0)) -> None:
+        """Create player instance
+
+        :param position: coordinate `(x,y)`, defaults to `(0,0)`
+        :type position: tuple, optional
+        """
         super().__init__()
-        self.position = pygame.Vector2(start_position)
-        self.sprite_list = []
+
+        # Player Flags #############
         self.sprite_number = 0
+        self.flipped = False
+        self.touching_ground = False
+        self.moving_left = False
+        self.moving_right = True
+        ############################
 
-        for i in range(number_of_sprites):
-            self.sprite_list.append(image_path + str(i) + '.png')
+        # Player Variables #############################
+        self.position = Vector2(position[0],position[1])
+        self.velocity = Vector2(0,0)
+        self.acceleration = Vector2(0,0)
+        self.gravity = 1
+        self.friction = 0.2
+        self.terminal_velocity = 200
+        ################################################
 
-        self.image = pygame.image.load(self.sprite_list[self.sprite_number]).convert_alpha()
-        self.rect = self.image.get_rect()
+        # Build sprite list: #############################################################
+        # {Sprite Number: (Image, Rect)}
+        self.player_sprites = {}
 
-        self.mask = None
-        self.mask_rect = None
+        for i in range(6):
+            img = transform.scale_by(
+                image.load('assets/images/player/player'+str(i)+'.png').convert_alpha(),3)
+            self.player_sprites[i] = img, img.get_rect()
+        ###################################################################################
 
-    def move(self, position:tuple=None) -> None:
-        """Update player position
+        self.image = self.player_sprites[self.sprite_number][0]
+        self.rect = self.player_sprites[self.sprite_number][1]
 
-        Args: position (tuple, optional): Change in position (vector form). Defaults to None.
+    def move(self, deltatime:float) -> None:
+        """Move player
+
+        :param deltatime: used for smooth motion
+        :type deltatime: float
         """
-        self.rect.move_ip(position)
+        # Gravity ############################
+        if not self.touching_ground:
+            self.acceleration.y = self.gravity
+        ######################################
 
-    def change_sprite_number(self, sprite_number:int) -> None:
-        """Change sprite number
+        self.velocity += self.acceleration
+        self.position += (self.velocity*deltatime)
+        self.rect.x = round(self.position.x)
+        self.rect.y = round(self.position.y)
 
-        Args:
-            sprite_number (int): sprite number in list
+    def update(self, deltatime:float, collidable_group:sprite.Group=None) -> None:
+        """Player update method
+
+        :param deltatime: used for smooth motion
+        :type deltatime: float
+        :param collidable_group: sprite group to collide with, defaults to None
+        :type collidable_group: pygame.sprite.Group, optional
         """
-        self.sprite_number = sprite_number
-        self.image = pygame.image.load(self.sprite_list[self.sprite_number]).convert_alpha()
+        # Update player image ##############################################
+        # Sprite number limiter
+        if self.sprite_number > len(self.player_sprites)-1:
+            self.sprite_number = len(self.player_sprites)-1
+        elif self.sprite_number < 0:
+            self.sprite_number = 0
 
-    def get_player_mask(self) -> None:
-        """Get mask of player sprite and draw to surface
+        # Set player rect
+        self.rect = self.player_sprites[self.sprite_number][1]
 
-        Returns:
-            (pygame.mask): mask image of player
-        """
-        return pygame.mask.from_surface(self.image)
+        if self.moving_left:
+            if not self.flipped:
+                self.image = transform.flip(
+                    self.player_sprites[self.sprite_number][0],True, False)
+                self.flipped = True
 
-    def draw(self, surface, flipped:bool=False, player_mask:bool=False) -> None:
-        """Draws player on surface
+        if self.moving_right:
+            if self.flipped:
+                self.image = transform.flip(
+                    self.player_sprites[self.sprite_number][0], True, False)
+                self.flipped = False
+            else:
+                self.image = self.player_sprites[self.sprite_number][0]
+        ####################################################################
 
-        Args:
-            surface (pygame.surface): Surface object
-        """
-        self.change_sprite_number(self.sprite_number)
-        if flipped:
-            self.image = pygame.transform.flip(self.image,1,0)
-        if player_mask:
-            surface.blit(self.get_player_mask().to_surface(), self.position)
-        else:
-            surface.blit(self.image, self.position)
+        self.move(deltatime)
