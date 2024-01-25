@@ -64,7 +64,8 @@ while True:
     test_rect.update(0)
     player.update(dt)
 
-    screen.blit(splashscreen,(0,0))
+    screen.fill((0,0,0))
+    #screen.blit(splashscreen,(0,0))
     screen.blit(level_terrain,(0,0))
     screen.blit(level_outline,(0,0))
 
