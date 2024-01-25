@@ -57,7 +57,7 @@ while True:
     dt, previous_time = get_deltatime(previous_time)
     input_processor()
     mouse_pos = pygame.mouse.get_pos()
-
+    print(dt)
     test_rect.position = mouse_pos
     #player.position = mouse_pos
 
@@ -69,7 +69,7 @@ while True:
     screen.blit(level_terrain,(0,0))
     screen.blit(level_outline,(0,0))
 
-    screen.blit(test_rect.image,test_rect.position)
+    #screen.blit(test_rect.image,test_rect.position)
 
     screen.blit(player.image,player.position)
     particles.draw(test_rect.position, screen)
