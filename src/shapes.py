@@ -31,7 +31,7 @@ class Circle(sprite.Sprite):
         draw.circle(self.image, self.color, self.position, self.radius, self.outline_width)
 
     def move(self, deltatime:float) -> None:
-        """Move rectangle
+        """Move circle
 
         :param deltatime: used for smooth motion
         :type deltatime: float
@@ -43,7 +43,7 @@ class Circle(sprite.Sprite):
         self.rect.y = round(self.position.y)
 
     def update(self, deltatime:float) -> None:
-        """Rectangle update method 
+        """Circle update method 
 
         :param deltatime: used for smooth motion
         :type deltatime: float

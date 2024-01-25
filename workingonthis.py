@@ -1,5 +1,6 @@
 # pylint: disable=maybe-no-member
 import sys
+from random import randint
 import pygame
 from pygame.locals import *
 
@@ -10,6 +11,7 @@ from src.player import Player
 from src.level import Level
 from src.collisions import intersecting_rect_with_sprite_group
 from src.lighting import get_outline
+from src.particles import Particles
 #from src.curves import mesh
 
 pygame.init()
@@ -29,7 +31,7 @@ level_outline = get_outline(level_terrain)
 splashscreen = pygame.image.load('assets/images/background.png').convert_alpha()
 splashscreen = pygame.transform.scale(splashscreen, (screen.get_width(), screen.get_height()))
 
-
+particles = Particles()
 #pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP]) # allows certain inputs to increase performance
 
 
@@ -60,17 +62,22 @@ while True:
 
     mouse_pos = pygame.mouse.get_pos()
 
+    particles.add_particle((mouse_pos[0]+randint(-10,10),mouse_pos[1]+randint(-10,10)),6)
+
     test_rect.position = mouse_pos
 
     test_rect.update(dt)
+    particles.update(dt)
     #player.update(dt)
 
     screen.blit(splashscreen,(0,0))
-    screen.blit(level_terrain,(0,0))
+    #screen.blit(level_terrain,(0,0))
     screen.blit(level_outline,(0,0))
+    particles.draw(screen)
 
     screen.blit(test_rect.image,test_rect.position)
     screen.blit(test_rect_outline,test_rect.position)
+    
 
     #screen.blit(player.image,player.position)
 

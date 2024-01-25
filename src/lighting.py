@@ -22,12 +22,6 @@ def get_outline(surface:Surface) -> Surface:
 
     return outline
 
-class Particles:
-    def __init__(self):
-        self.particles = []
-    
-    def update(self, position:tuple=(0,0), deltatime:float):
-        for particle in self.particles:
             
 
 
