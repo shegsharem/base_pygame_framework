@@ -39,7 +39,7 @@ points = [
 
 quadratic = []
 xs = []
-for x in range(-200,200,1):
+for x in range(-200,200):
     xs.append(x)
 
 for x,y in enumerate(xs):
