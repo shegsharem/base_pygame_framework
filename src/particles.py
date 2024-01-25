@@ -1,64 +1,41 @@
 """Module for particle effects in pygame"""
-from random import uniform
+from random import uniform, randint
 from math import pi, cos, sin
 from pygame import Surface, sprite, draw, Vector2
 from pygame.locals import SRCALPHA
 from src.shapes import Circle
 
-class Particles(sprite.Sprite):
+class Particles():
     """Particle class for the use of particles in pygame"""
-    @staticmethod
-    def get_group_dimensions(sprite_group:sprite.Group) -> tuple[int,int]:
-        """Get screen space occupied by sprite group members
-
-        :param sprite_group: `sprite group`
-        :type sprite_group: sprite.Group
-        :return: dimensions of sprite_group `(width,height)`
-        :rtype: tuple[int,int]
-        """
-        width, height = 0, 0
-        width = max(particle.rect.left for particle in sprite_group)
-        height = max(particle.rect.bottom for particle in sprite_group)
-        return (width,height)
-
     def __init__(self) -> None:
-        super().__init__()
+        """Create new particle(s)."""
         self.particles = []
-        self.surface_dimension = (0,0)
-        self.image = Surface(self.surface_dimension,SRCALPHA)
-        self.rect = None
 
-    def add(self, position:tuple=(0,0), radius=1,
-            color:tuple=(255,255,255), outline_width=0) -> None:
-        """Add new particle
+    def draw(self, position:tuple, screen:Surface):
+        """Draw particles
+        
+        General list structure for the particle data is:
+        [(x,y), (dx,dy), radius]
 
-        :param `position`: coordinate `(x,y)`, defaults to `(0,0)`
-        :type position: tuple, optional
-        :param `radius`: Circle radius, defaults to `1`
-        :type radius: int, optional
-        :param `color`: Fill color, defaults to `(255,255,255)`
-        :type color: tuple, optional
-        :param `outline_width`: Filled width (pixels) from edge. If not used,
-            circle will be fully colored., defaults to `0`
-        :type outline_width: int, optional
+        :param particles: 
+        :type particles: list
         """
-        particle = Circle(position, radius, color, outline_width)
-        self.particles.append(particle)
+        self.particles.append([position, [randint(0, 30) / 15 - 1, -1], randint(4, 10)])
+        for particle in self.particles:
+            particle[0][0] += particle[1][0]
+            particle[0][1] += particle[1][1]
+            particle[2] -= 0.01
+            particle[1][1] += 0.001
+
+            draw.circle(
+                screen, (255, 255, 255,90),
+                [int(particle[0][0]),int(particle[0][1])],
+                int(particle[2])
+            )
+
+            if particle[2] <= 0:
+                self.particles.remove(particle)
 
 
-    def update(self, deltatime:float) -> None:
-        """Render particles 
 
-        :param deltatime: used for smooth motion
-        :type deltatime: float
-        """
-        size = Particles.get_group_dimensions(self.particles)
 
-        if size != self.surface_dimension:
-            self.surface_dimension = size
-            self.image = Surface(size)
-            self.rect = self.image.get_rect()
-
-        self.particles.update(deltatime)
-        self.particles.draw(self.image)
-        self.image.convert_alpha()

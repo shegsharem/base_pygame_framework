@@ -32,7 +32,7 @@ splashscreen = pygame.image.load('assets/images/background.png').convert_alpha()
 splashscreen = pygame.transform.scale(splashscreen, (screen.get_width(), screen.get_height()))
 
 #pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP]) # allows certain inputs to increase performance
-
+particles = Particles()
 
 def input_processor() -> None:
     """Logic function for pygame events."""
@@ -59,12 +59,10 @@ while True:
     mouse_pos = pygame.mouse.get_pos()
 
     test_rect.position = mouse_pos
-    player.position = mouse_pos
-
+    #player.position = mouse_pos
 
     test_rect.update(0)
-    player.update(0)
-
+    player.update(dt)
 
     screen.blit(splashscreen,(0,0))
     screen.blit(level_terrain,(0,0))
@@ -73,5 +71,6 @@ while True:
     screen.blit(test_rect.image,test_rect.position)
 
     screen.blit(player.image,player.position)
+    particles.draw(test_rect.position, screen)
 
     pygame.display.flip()
