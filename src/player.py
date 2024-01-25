@@ -60,6 +60,10 @@ class Player(sprite.Sprite):
         self.rect.x = round(self.position.x)
         self.rect.y = round(self.position.y)
 
+        # Check collisions
+        if collidable_group:
+            collision = intersecting_rect_with_sprite_group(self.rect, collidable_group)
+
     def update(self, deltatime:float, collidable_group:sprite.Group=None) -> None:
         """Player update method
 

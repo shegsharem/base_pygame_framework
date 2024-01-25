@@ -22,7 +22,5 @@ def get_outline(surface:Surface) -> Surface:
 
     return outline
 
-            
-
 
 

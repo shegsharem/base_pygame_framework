@@ -3,61 +3,62 @@ from random import uniform
 from math import pi, cos, sin
 from pygame import Surface, sprite, draw, Vector2
 from pygame.locals import SRCALPHA
+from src.shapes import Circle
 
-class Particle(sprite.Sprite):
-    """Generic particle class for pygame"""
-    def __init__(self, position=(0,0), radius=1) -> None:
-        """Create particle instance
+class Particles(sprite.Sprite):
+    """Particle class for the use of particles in pygame"""
+    @staticmethod
+    def get_group_dimensions(sprite_group:sprite.Group) -> tuple[int,int]:
+        """Get screen space occupied by sprite group members
 
-        :param position: `(x,y)`, defaults to `(0,0)`
-        :type position: tuple, optional
-        :param radius: `particle radius`, defaults to `1`
-        :type radius: int, optional
+        :param sprite_group: `sprite group`
+        :type sprite_group: sprite.Group
+        :return: dimensions of sprite_group `(width,height)`
+        :rtype: tuple[int,int]
         """
-        super().__init__()
-        self.position = Vector2((position[0]+radius, position[1]+radius))
-        self.velocity = Vector2(uniform(0.5,1.5),uniform(0.5,1.5))
-        self.radius = radius
-        self.theta = uniform(0,2*pi)
-        self.image = Surface([radius*2, radius*2])
-        self.rect = self.image.get_rect()
+        width, height = 0, 0
+        width = max(particle.rect.left for particle in sprite_group)
+        height = max(particle.rect.bottom for particle in sprite_group)
+        return (width,height)
 
-        # Draw particle on self.image
-        draw.circle(self.image, (255,255,255), self.position, self.radius)
-        self.image.convert_alpha()
-
-    def move(self, deltatime:float) -> None:
-        """Move particle
-
-        :param deltatime: used for smooth motion
-        :type deltatime: float
-        """
-        self.theta += 100
-        self.velocity *= (cos(self.theta), sin(self.theta)
-
-        self.position += (
-            cos(self.theta)*self.velocity.x*deltatime,
-            sin(self.theta)*self.velocity.y*deltatime
-        )
-
-        self.position.x -= self.radius
-        self.position.y -= self.radius
-        
-        self.rect.x = round(self.position.x)
-        self.rect.y = round(self.position.y)
-
-    def update(self, deltatime:float) -> None:
-        """Particle update method
-
-        :param deltatime: used for smooth motion
-        :type deltatime: float
-        """
-        self.move(deltatime)
-
-class Particles(sprite.Group):
     def __init__(self) -> None:
         super().__init__()
-        pass
+        self.particles = []
+        self.surface_dimension = (0,0)
+        self.image = Surface(self.surface_dimension,SRCALPHA)
+        self.rect = None
 
-    def add_particle(self, position=(0,0), radius=1) -> None:
-        self.add(Particle(position, radius))
+    def add(self, position:tuple=(0,0), radius=1,
+            color:tuple=(255,255,255), outline_width=0) -> None:
+        """Add new particle
+
+        :param `position`: coordinate `(x,y)`, defaults to `(0,0)`
+        :type position: tuple, optional
+        :param `radius`: Circle radius, defaults to `1`
+        :type radius: int, optional
+        :param `color`: Fill color, defaults to `(255,255,255)`
+        :type color: tuple, optional
+        :param `outline_width`: Filled width (pixels) from edge. If not used,
+            circle will be fully colored., defaults to `0`
+        :type outline_width: int, optional
+        """
+        particle = Circle(position, radius, color, outline_width)
+        self.particles.append(particle)
+
+
+    def update(self, deltatime:float) -> None:
+        """Render particles 
+
+        :param deltatime: used for smooth motion
+        :type deltatime: float
+        """
+        size = Particles.get_group_dimensions(self.particles)
+
+        if size != self.surface_dimension:
+            self.surface_dimension = size
+            self.image = Surface(size)
+            self.rect = self.image.get_rect()
+
+        self.particles.update(deltatime)
+        self.particles.draw(self.image)
+        self.image.convert_alpha()
