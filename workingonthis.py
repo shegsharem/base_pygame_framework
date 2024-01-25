@@ -10,8 +10,7 @@ from src.player import Player
 from src.level import Level
 from src.collisions import intersecting_rect_with_sprite_group
 from src.lighting import get_outline
-from src.curves import mesh
-import math
+#from src.curves import mesh
 
 pygame.init()
 
@@ -29,23 +28,6 @@ level_terrain = background.render_terrain(screen)
 level_outline = get_outline(level_terrain)
 splashscreen = pygame.image.load('assets/images/background.png').convert_alpha()
 splashscreen = pygame.transform.scale(splashscreen, (screen.get_width(), screen.get_height()))
-
-points = [
-    (100,100),(500,100),
-    (300,400),(100,100),
-    (300,200),(500,100),
-    (300,200),(300,400)
-]
-
-quadratic = []
-xs = []
-for x in range(-200,200):
-    xs.append(x)
-
-for x,y in enumerate(xs):
-    quadratic.append((x,math.pow(1/10*y,2)))
-
-point_mesh = mesh(quadratic)
 
 
 #pygame.event.set_allowed([QUIT, KEYDOWN, KEYUP]) # allows certain inputs to increase performance
@@ -70,7 +52,6 @@ def input_processor() -> None:
         #player.acceleration.y = -2
         #player.touching_ground = True
 
-y=0
 while True:
     dt, previous_time = get_deltatime(previous_time)
 
@@ -90,8 +71,6 @@ while True:
 
     screen.blit(test_rect.image,test_rect.position)
     screen.blit(test_rect_outline,test_rect.position)
-    screen.blit(point_mesh, (200,200))
-    y+=10*dt
 
     #screen.blit(player.image,player.position)
 

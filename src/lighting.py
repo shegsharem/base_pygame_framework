@@ -1,5 +1,6 @@
 """Module for lighting and various visual effects in pygame"""
 from pygame import Surface, mask, draw
+from random import randint
 from pygame.locals import SRCALPHA
 
 def get_outline(surface:Surface) -> Surface:
@@ -20,3 +21,14 @@ def get_outline(surface:Surface) -> Surface:
         draw.lines(outline, (255,255,255,255), True, points)
 
     return outline
+
+class Particles:
+    def __init__(self):
+        self.particles = []
+    
+    def update(self, position:tuple=(0,0), deltatime:float):
+        for particle in self.particles:
+            
+
+
+

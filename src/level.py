@@ -24,11 +24,10 @@ class Level:
 
                 # Grass
                 if cell == "G":
-                    pass
-                    #self.terrain = sprite.Sprite()
-                    #self.terrain.image = grass
-                    #self.terrain.rect = self.terrain.image.get_rect().move(x,y)
-                    #self.terrain_group.add(self.terrain)
+                    self.terrain = sprite.Sprite()
+                    self.terrain.image = grass
+                    self.terrain.rect = self.terrain.image.get_rect().move(x,y)
+                    self.terrain_group.add(self.terrain)
 
                 if cell == " ":
                     pass
