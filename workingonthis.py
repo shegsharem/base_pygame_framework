@@ -23,11 +23,11 @@ test_rect = Rectangle((0,0),(50,50), (0,0,0))
 
 test_rect_outline = get_outline(test_rect.image)
 player = Player()
-level_map = list(open('level.txt'))
+player_outline = get_outline(player.image)
 
-background = Level(level_map)
-level_terrain = background.render_terrain(screen)
-level_outline = get_outline(level_terrain)
+level = pygame.Surface((1280,720), SRCALPHA)
+Level('level.txt').draw(level)
+
 splashscreen = pygame.image.load('assets/images/background.png').convert_alpha()
 splashscreen = pygame.transform.scale(splashscreen, (screen.get_width(), screen.get_height()))
 
@@ -58,20 +58,16 @@ while True:
     input_processor()
     mouse_pos = pygame.mouse.get_pos()
     print(dt)
-    test_rect.position = mouse_pos
-    #player.position = mouse_pos
+    #test_rect.position = mouse_pos
+    player.position = mouse_pos
 
     test_rect.update(0)
     player.update(dt)
 
-    screen.fill((0,0,0))
-    #screen.blit(splashscreen,(0,0))
-    screen.blit(level_terrain,(0,0))
-    screen.blit(level_outline,(0,0))
-
-    #screen.blit(test_rect.image,test_rect.position)
+    screen.blit(splashscreen,(0,0))
+    screen.blit(level,(0,0))
 
     screen.blit(player.image,player.position)
-    particles.draw(test_rect.position, screen)
+    screen.blit(player_outline,player.position)
 
     pygame.display.flip()

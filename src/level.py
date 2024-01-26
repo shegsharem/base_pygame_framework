@@ -1,50 +1,79 @@
 """Level loader"""
-from pygame import sprite, Surface, mask, image, transform
+from pygame import sprite, Surface, image, transform
 from pygame.locals import SRCALPHA
 
-class Level:
-    """Level class. Block sprites shall be 10x10px"""
-    def __init__(self, level_map:list) -> None:
-        self.level_map = level_map
-        self.terrain_group = sprite.Group()
-        dirt = transform.scale(image.load("assets/images/dirt.png").convert_alpha(), (36,36))
-        grass = transform.scale(image.load("assets/images/grass.png").convert_alpha(), (36,36))
+class Dirt(sprite.Sprite):
+    """Dirt sprite"""
+    def __init__(self) -> None:
+        super().__init__()
+        __scale = (36,36)
+        __path = "assets/images/dirt.png"
+        self.image = Surface(__scale,SRCALPHA)
+        self.dirt = transform.scale(image.load(__path).convert_alpha(), __scale)
+        self.image.blit(self.dirt,(0,0))
+        self.rect = self.image.get_bounding_rect()
 
-        for row_index, row in enumerate(self.level_map):
+
+class Grass(sprite.Sprite):
+    """Grass sprite"""
+    def __init__(self, type:str=None) -> None:
+        super().__init__()
+        __scale = (36,36)
+        __path = "assets/images/grass.png"
+        if type == 'left':
+            __path = "assets/images/grass_left.png"
+        if type == 'right':
+            __path = "assets/images/grass_right.png"
+        self.image = Surface(__scale,SRCALPHA)
+        self.grass = transform.scale(image.load(__path).convert_alpha(), __scale)
+        self.image.blit(self.grass,(0,0))
+        self.rect = self.image.get_bounding_rect()
+
+
+class Level(sprite.Group):
+    """Main level class"""
+    def __init__(self, mapfilepath:str) -> None:
+        """Create new level instance
+
+        :param mapfilepath: `filepath` for level map
+        :type mapfilepath: str
+        """
+        super().__init__()
+
+        # Read level map file ###########################
+        with open(mapfilepath, encoding="utf-8") as file:
+            __tilemap = list(file)
+        #################################################
+
+        for row_index, row in enumerate(__tilemap):
             for col_index, cell in enumerate(row):
-                x = -36 + int(col_index*36)
-                y = -36 + int(row_index*36)
-
-                # Dirt
                 if cell == "D":
-                    self.terrain = sprite.Sprite()
-                    self.terrain.image = dirt
-                    self.terrain.rect = self.terrain.image.get_rect().move(x,y)
-                    self.terrain_group.add(self.terrain)
+                    dirt = Dirt()
+                    dirt.rect.topleft = (
+                        -36+int(col_index*36),
+                        -36+int(row_index*36))
+                    self.add(dirt)
 
-                # Grass
                 if cell == "G":
-                    self.terrain = sprite.Sprite()
-                    self.terrain.image = grass
-                    self.terrain.rect = self.terrain.image.get_rect().move(x,y)
-                    self.terrain_group.add(self.terrain)
+                    grass = Grass()
+                    grass.rect.topleft = (
+                        -36+int(col_index*36),
+                        -36+int(row_index*36))
+                    self.add(grass)
+
+                if cell == "F":
+                    grass = Grass('left')
+                    grass.rect.topleft = (
+                        -36+int(col_index*36),
+                        -36+int(row_index*36))
+                    self.add(grass)
+
+                if cell == "H":
+                    grass = Grass('right')
+                    grass.rect.topleft = (
+                        -36+int(col_index*36),
+                        -36+int(row_index*36))
+                    self.add(grass)
 
                 if cell == " ":
                     pass
-
-
-    def render_terrain(self, screen:Surface) -> Surface:
-        """Render level to pygame surface, relative to game window size
-
-        Args:
-            screen (Surface): Game window
-
-        Returns:
-            Surface: Rendered level
-        """
-        level_surface = Surface((screen.get_width(),screen.get_height()),SRCALPHA)
-        for tile in self.terrain_group:
-            level_surface.blit(tile.image, tile.rect)
-        level_surface.convert_alpha()
-
-        return level_surface

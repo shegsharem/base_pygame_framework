@@ -42,17 +42,15 @@ class Player(sprite.Sprite):
         self.image = self.player_sprites[self.sprite_number][0]
         self.rect = self.player_sprites[self.sprite_number][1]
 
-    def move(self, deltatime:float, collidable_group:sprite.Group=None) -> None:
+    def move(self, deltatime:float) -> None:
         """Move player
 
         :param deltatime: used for smooth motion
         :type deltatime: float
-        :param collidable_group: sprite group to collide with, defaults to None
-        :type collidable_group: pygame.sprite.Group, optional
         """
         # Gravity ############################
-        if not self.touching_ground:
-            self.acceleration.y = self.gravity
+        #if not self.touching_ground:
+        #    self.acceleration.y = self.gravity
         ######################################
 
         self.velocity += self.acceleration
@@ -60,17 +58,11 @@ class Player(sprite.Sprite):
         self.rect.x = round(self.position.x)
         self.rect.y = round(self.position.y)
 
-        # Check collisions
-        if collidable_group:
-            collision = intersecting_rect_with_sprite_group(self.rect, collidable_group)
-
-    def update(self, deltatime:float, collidable_group:sprite.Group=None) -> None:
+    def update(self, deltatime:float) -> None:
         """Player update method
 
         :param deltatime: used for smooth motion
         :type deltatime: float
-        :param collidable_group: sprite group to collide with, defaults to None
-        :type collidable_group: pygame.sprite.Group, optional
         """
         # Update player image ##############################################
         # Sprite number limiter
@@ -97,4 +89,4 @@ class Player(sprite.Sprite):
                 self.image = self.player_sprites[self.sprite_number][0]
         ####################################################################
 
-        self.move(deltatime, collidable_group)
+        self.move(deltatime)
