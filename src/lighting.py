@@ -21,6 +21,3 @@ def get_outline(surface:Surface) -> Surface:
         draw.lines(outline, (255,255,255,255), True, points)
 
     return outline
-
-
-
