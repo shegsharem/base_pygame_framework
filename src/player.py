@@ -1,34 +1,13 @@
 """Python 3.12.1"""
 from pygame import sprite, Vector2, transform, image, Surface, key, quit
 from pygame.locals import *
-from src.collisions import check_collision_with_sprite_group
 
 class Player(sprite.Sprite):
-    """Player Class"""
-    def __init__(self, position:tuple=(0,0)) -> None:
-        """Create player instance
+    def __init__(self, *groups) -> None:
+        super().__init__(*groups)
 
-        :param position: coordinate `(x,y)`, defaults to `(0,0)`
-        :type position: tuple, optional
-        """
-        super().__init__()
-
-        # Player Flags #############
         self.sprite_number = 0
-        self.flipped = False
         self.touching_ground = False
-        self.moving_left = False
-        self.moving_right = True
-        ############################
-
-        # Player Variables #############################
-        self.position = Vector2(position[0],position[1])
-        self.velocity = Vector2(0,0)
-        self.acceleration = Vector2(0,0)
-        self.gravity = 1
-        self.friction = 0.2
-        self.terminal_velocity = 200
-        ################################################
 
         # Build sprite list: #############################################################
         # {Sprite Number: (Image, Rect)}
@@ -36,75 +15,18 @@ class Player(sprite.Sprite):
 
         for i in range(6):
             img = transform.scale_by(
-                image.load('assets/images/player/player'+str(i)+'.png').convert_alpha(),3)
-            self.player_sprites[i] = img, img.get_bounding_rect()
+                image.load('assets/images/player/player'+str(i)+'.png').convert_alpha(),2)
+            self.player_sprites[i] = img, img.get_rect()
         ###################################################################################
 
         self.image = self.player_sprites[self.sprite_number][0]
         self.rect = self.player_sprites[self.sprite_number][1]
+        self.old_rect = None
 
-    def move(self, deltatime:float) -> None:
-        """Move player
-
-        :param deltatime: used for smooth motion
-        :type deltatime: float
-        """
-        # Gravity ############################
-        #if not self.touching_ground:
-        #    self.acceleration.y = self.gravity
-        ######################################
-
-        self.velocity += self.acceleration
-        self.position += (self.velocity*deltatime)
-        self.rect.x = round(self.position.x)
-        self.rect.y = round(self.position.y)
-
-    def update(self, deltatime:float) -> None:
-        """Player update method
-
-        :param deltatime: used for smooth motion
-        :type deltatime: float
-        """
-        # Update player image ##############################################
-        # Sprite number limiter
-        if self.sprite_number > len(self.player_sprites)-1:
-            self.sprite_number = len(self.player_sprites)-1
-        elif self.sprite_number < 0:
-            self.sprite_number = 0
-
-        # Set player rect
-        self.rect = self.player_sprites[self.sprite_number][1]
-
-        if self.moving_left:
-            if not self.flipped:
-                self.image = transform.flip(
-                    self.player_sprites[self.sprite_number][0],True, False)
-                self.flipped = True
-
-        if self.moving_right:
-            if self.flipped:
-                self.image = transform.flip(
-                    self.player_sprites[self.sprite_number][0], True, False)
-                self.flipped = False
-            else:
-                self.image = self.player_sprites[self.sprite_number][0]
-        ####################################################################
-
-        self.move(deltatime)
-
-class SimplePlayer(sprite.Sprite):
-    def __init__(self, *groups) -> None:
-        super().__init__(*groups)
-        self.image = Surface((25,26),SRCALPHA)
-        self.image.fill((255,255,0))
-
-        self.rect = self.image.get_rect()
-
-        self.position = Vector2(self.rect.topleft)
+        self.position = Vector2(0,0)
         self.direction = Vector2()
         self.speed = 200
 
-        self.touching_ground = False
 
     def input(self) -> None:
         """Get keyboard input"""
@@ -115,9 +37,10 @@ class SimplePlayer(sprite.Sprite):
 
         if keys[K_w]:
             self.direction.y = -1
+            self.speed += 1
         elif keys[K_s]:
             self.direction.y = 1
-        else: self.direction.y = -1
+        else: self.direction.y = 1
 
         if keys[K_d]:
             self.direction.x = 1
@@ -125,6 +48,36 @@ class SimplePlayer(sprite.Sprite):
             self.direction.x = -1
         else: self.direction.x = 0
 
+    def collision(self,axis:str,group:sprite.Group) -> None:
+        """Checks if player is colliding with sprite group
+
+        :param axis: axis to check `(x or y)`
+        :type axis: str
+        :param group: collideable sprite group
+        :type group: sprite.Group
+        """
+        collisions = sprite.spritecollide(self,group,False)
+        if collisions:
+            # Check x direction
+            if axis == "x":
+                for s in collisions:
+                    if self.rect.right >= s.rect.left and self.old_rect.right <= s.rect.left:
+                        self.rect.right = s.rect.left
+                        self.position.x = self.rect.x
+                    if self.rect.left <= s.rect.right and self.old_rect.left >= s.rect.right:
+                        self.rect.left = s.rect.right
+                        self.position.x = self.rect.x
+
+            # Check y direction
+            if axis == "y":
+                for s in collisions:
+                    if self.rect.top <= s.rect.bottom and self.old_rect.top >= s.rect.bottom:
+                        self.rect.top = s.rect.bottom
+                        self.position.y = self.rect.y
+                    if self.rect.bottom >= s.rect.top and self.old_rect.bottom <= s.rect.top:
+                        self.rect.bottom = s.rect.top
+                        self.position.y = self.rect.y
+                        self.touching_ground = True
 
     def update(self, deltatime:float, group:sprite.Group) -> None:
         """Rectangle update method 
@@ -132,17 +85,25 @@ class SimplePlayer(sprite.Sprite):
         :param deltatime: used for smooth motion
         :type deltatime: float
         """
+        if self.touching_ground:
+            self.sprite_number = 3
+            self.image = self.player_sprites[self.sprite_number][0]
+            self.rect = self.player_sprites[self.sprite_number][1]
+
+        self.old_rect = self.rect.copy()
         self.input()
-
-        collisions = check_collision_with_sprite_group(self, group)
-        if collisions['bottom']:
-            self.touching_ground = True
-
-        if not self.touching_ground:
-            self.direction.y = 1
 
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
 
-        self.position += (self.direction*self.speed*deltatime)
-        self.rect.topleft = round(self.position.x), round(self.position.y)
+        # Horizontal Collision
+        self.position.x += (self.direction.x*self.speed*deltatime)
+        self.rect.x = round(self.position.x)
+        self.collision("x", group)
+
+        # Vertical Collision
+        self.position.y += (self.direction.y*self.speed*deltatime)
+        self.rect.y = round(self.position.y)
+        self.collision("y", group)
+
+        

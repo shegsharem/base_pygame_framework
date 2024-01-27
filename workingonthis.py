@@ -7,7 +7,7 @@ from pygame.locals import *
 # Game Modules
 from src.shapes import Circle, Rectangle
 from src.deltatime import get_deltatime
-from src.player import SimplePlayer
+from src.player import Player
 from src.level import Level
 from src.collisions import check_collision_with_sprite_group
 from src.lighting import get_outline
@@ -19,7 +19,7 @@ pygame.init()
 screen = pygame.display.set_mode((1280,720), DOUBLEBUF)
 previous_time = get_deltatime()
 
-player = SimplePlayer()
+player = Player()
 player.speed = 500
 
 level_surface = pygame.Surface((1280*2,720*2), SRCALPHA)
