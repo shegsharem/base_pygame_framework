@@ -1,6 +1,7 @@
 """Python 3.12.1"""
-from pygame import sprite, Vector2, transform, image
-from src.collisions import intersecting_rect_with_sprite_group
+from pygame import sprite, Vector2, transform, image, Surface, key, quit
+from pygame.locals import *
+from src.collisions import check_collision_with_sprite_group
 
 class Player(sprite.Sprite):
     """Player Class"""
@@ -90,3 +91,58 @@ class Player(sprite.Sprite):
         ####################################################################
 
         self.move(deltatime)
+
+class SimplePlayer(sprite.Sprite):
+    def __init__(self, *groups) -> None:
+        super().__init__(*groups)
+        self.image = Surface((25,26),SRCALPHA)
+        self.image.fill((255,255,0))
+
+        self.rect = self.image.get_rect()
+
+        self.position = Vector2(self.rect.topleft)
+        self.direction = Vector2()
+        self.speed = 200
+
+        self.touching_ground = False
+
+    def input(self) -> None:
+        """Get keyboard input"""
+        keys = key.get_pressed()
+        if keys[K_ESCAPE]:
+            quit()
+            exit()
+
+        if keys[K_w]:
+            self.direction.y = -1
+        elif keys[K_s]:
+            self.direction.y = 1
+        else: self.direction.y = -1
+
+        if keys[K_d]:
+            self.direction.x = 1
+        elif keys[K_a]:
+            self.direction.x = -1
+        else: self.direction.x = 0
+
+
+    def update(self, deltatime:float, group:sprite.Group) -> None:
+        """Rectangle update method 
+
+        :param deltatime: used for smooth motion
+        :type deltatime: float
+        """
+        self.input()
+
+        collisions = check_collision_with_sprite_group(self, group)
+        if collisions['bottom']:
+            self.touching_ground = True
+
+        if not self.touching_ground:
+            self.direction.y = 1
+
+        if self.direction.magnitude() != 0:
+            self.direction = self.direction.normalize()
+
+        self.position += (self.direction*self.speed*deltatime)
+        self.rect.topleft = round(self.position.x), round(self.position.y)

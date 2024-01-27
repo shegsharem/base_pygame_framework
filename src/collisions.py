@@ -1,9 +1,19 @@
 """Python 3.12.1"""
-from pygame import Rect, sprite, rect
+from pygame import Rect, sprite
 
 def check_collision_with_sprite_group(target:sprite.Sprite, group:sprite.Group) -> dict[str, bool]:
+    """Check collisions between a sprite and a group of sprites
+
+    :param target: `target sprite`
+    :type target: sprite.Sprite
+    :param group: `sprite group`
+    :type group: sprite.Group
+    :return: where it has collided
+    :rtype: dict[str, bool]
+    """
     collision = sprite.spritecollideany(target,group)
     tolerance = 2
+
     collisions = {
         "top": False,
         "bottom": False,
@@ -14,19 +24,24 @@ def check_collision_with_sprite_group(target:sprite.Sprite, group:sprite.Group) 
     if collision:
         if abs(target.rect.bottom-collision.rect.top) < tolerance:
             collisions['bottom'] = True
-            target.position.y -=1
+            target.rect.bottom = collision.rect.top
+            target.position.y = target.rect.y
 
         if abs(target.rect.top-collision.rect.bottom) < tolerance:
             collisions['top'] = True
-            target.position.y +=1
+            target.rect.top = collision.rect.bottom
+            target.position.y = target.rect.y
 
-        elif abs(target.rect.right-collision.rect.left) < tolerance:
+        if abs(target.rect.right-collision.rect.left) < tolerance:
             collisions['right'] = True
-            target.position.x -=1
+            target.rect.right = collision.rect.left
+            target.position.x = target.rect.x
 
-        elif abs(target.rect.left-collision.rect.right) < tolerance:
+        if abs(target.rect.left-collision.rect.right) < tolerance:
             collisions['left'] = True
-            target.position.x +=1
+            target.rect.left = collision.rect.right
+            target.position.x = target.rect.x
+
     return collisions
 
 def intersecting_rect_with_sprite_group(rect:Rect, sprite_group:sprite.Group) -> Rect | None:
