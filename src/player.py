@@ -26,7 +26,7 @@ class Player(sprite.Sprite):
 
         self.position = Vector2(0,0)
         self.direction = Vector2()
-        self.speed = 400
+        self.speed = 700
 
 
     def input(self) -> None:
@@ -94,7 +94,7 @@ class Player(sprite.Sprite):
                         self.rect.bottom = s.rect.top
                         self.position.y = self.rect.y
                         self.touching_ground = True
-   
+
         else:
             self.touching_ground = False
 
@@ -133,4 +133,3 @@ class Player(sprite.Sprite):
         self.position.y += (self.direction.y*self.speed*deltatime)
         self.rect.y = self.position.y
         self.collision("y", group)
-        print(self.touching_ground)
