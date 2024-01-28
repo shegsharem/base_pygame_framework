@@ -8,6 +8,7 @@ class Player(sprite.Sprite):
 
         self.sprite_number = 0
         self.touching_ground = False
+        self.facing_left = False
 
         # Build sprite list: #############################################################
         # {Sprite Number: (Image, Rect)}
@@ -16,7 +17,7 @@ class Player(sprite.Sprite):
         for i in range(6):
             img = transform.scale_by(
                 image.load('assets/images/player/player'+str(i)+'.png').convert_alpha(),2)
-            self.player_sprites[i] = img, img.get_rect()
+            self.player_sprites[i] = img, img.get_frect()
         ###################################################################################
 
         self.image = self.player_sprites[self.sprite_number][0]
@@ -25,28 +26,43 @@ class Player(sprite.Sprite):
 
         self.position = Vector2(0,0)
         self.direction = Vector2()
-        self.speed = 200
+        self.speed = 400
 
 
     def input(self) -> None:
         """Get keyboard input"""
         keys = key.get_pressed()
+
         if keys[K_ESCAPE]:
             quit()
             exit()
 
+        # VERTICAL ################
         if keys[K_w]:
+            self.touching_ground = False
             self.direction.y = -1
-            self.speed += 1
+            self.sprite_number = 5
+
         elif keys[K_s]:
             self.direction.y = 1
-        else: self.direction.y = 1
 
+        else:
+            # Gravity
+            self.direction.y = 1
+        ###########################
+
+        # HORIZONTAL ################
         if keys[K_d]:
             self.direction.x = 1
+            self.facing_left = False
+
         elif keys[K_a]:
             self.direction.x = -1
-        else: self.direction.x = 0
+            self.facing_left = True
+
+        else:
+            self.direction.x = 0
+        #############################
 
     def collision(self,axis:str,group:sprite.Group) -> None:
         """Checks if player is colliding with sprite group
@@ -78,6 +94,10 @@ class Player(sprite.Sprite):
                         self.rect.bottom = s.rect.top
                         self.position.y = self.rect.y
                         self.touching_ground = True
+   
+        else:
+            self.touching_ground = False
+
 
     def update(self, deltatime:float, group:sprite.Group) -> None:
         """Rectangle update method 
@@ -87,8 +107,16 @@ class Player(sprite.Sprite):
         """
         if self.touching_ground:
             self.sprite_number = 3
-            self.image = self.player_sprites[self.sprite_number][0]
-            self.rect = self.player_sprites[self.sprite_number][1]
+            self.speed = 400
+
+        elif not self.touching_ground:
+            self.speed += 1
+
+        self.image = self.player_sprites[self.sprite_number][0]
+        self.rect = self.player_sprites[self.sprite_number][1]
+
+
+        self.image = transform.flip(self.image, self.facing_left, False)
 
         self.old_rect = self.rect.copy()
         self.input()
@@ -98,12 +126,11 @@ class Player(sprite.Sprite):
 
         # Horizontal Collision
         self.position.x += (self.direction.x*self.speed*deltatime)
-        self.rect.x = round(self.position.x)
+        self.rect.x = self.position.x
         self.collision("x", group)
 
         # Vertical Collision
         self.position.y += (self.direction.y*self.speed*deltatime)
-        self.rect.y = round(self.position.y)
+        self.rect.y = self.position.y
         self.collision("y", group)
-
-        
+        print(self.touching_ground)
