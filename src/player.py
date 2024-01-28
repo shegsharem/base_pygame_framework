@@ -12,16 +12,25 @@ class Player(sprite.Sprite):
 
         # Build sprite list: #############################################################
         # {Sprite Number: (Image, Rect)}
-        self.player_sprites = {}
+        self.player_sprites = []
+        __surface_width = 0
+        __surface_height = 0
 
         for i in range(6):
             img = transform.scale_by(
                 image.load('assets/images/player/player'+str(i)+'.png').convert_alpha(),2)
-            self.player_sprites[i] = img, img.get_frect()
+            self.player_sprites.append(img)
+
+            rect = img.get_rect()
+
+            if rect.width > __surface_width:
+                __surface_width = rect.width
+            if rect.height > __surface_height:
+                __surface_height = rect.height
         ###################################################################################
 
-        self.image = self.player_sprites[self.sprite_number][0]
-        self.rect = self.player_sprites[self.sprite_number][1]
+        self.image = Surface((__surface_width, __surface_height), SRCALPHA)
+        self.rect = self.image.get_frect()
         self.old_rect = None
 
         self.position = Vector2(0,0)
@@ -47,7 +56,6 @@ class Player(sprite.Sprite):
             self.direction.y = 1
 
         else:
-            # Gravity
             self.direction.y = 1
         ###########################
 
@@ -80,7 +88,7 @@ class Player(sprite.Sprite):
                     if self.rect.right >= s.rect.left and self.old_rect.right <= s.rect.left:
                         self.rect.right = s.rect.left
                         self.position.x = self.rect.x
-                    if self.rect.left <= s.rect.right and self.old_rect.left >= s.rect.right:
+                    elif self.rect.left <= s.rect.right and self.old_rect.left >= s.rect.right:
                         self.rect.left = s.rect.right
                         self.position.x = self.rect.x
 
@@ -90,13 +98,10 @@ class Player(sprite.Sprite):
                     if self.rect.top <= s.rect.bottom and self.old_rect.top >= s.rect.bottom:
                         self.rect.top = s.rect.bottom
                         self.position.y = self.rect.y
-                    if self.rect.bottom >= s.rect.top and self.old_rect.bottom <= s.rect.top:
+                    elif self.rect.bottom >= s.rect.top and self.old_rect.bottom <= s.rect.top:
                         self.rect.bottom = s.rect.top
                         self.position.y = self.rect.y
                         self.touching_ground = True
-
-        else:
-            self.touching_ground = False
 
 
     def update(self, deltatime:float, group:sprite.Group) -> None:
@@ -106,17 +111,20 @@ class Player(sprite.Sprite):
         :type deltatime: float
         """
         if self.touching_ground:
-            self.sprite_number = 3
-            self.speed = 400
+            if self.sprite_number > 2:
+                self.sprite_number -= 1
+            else: self.sprite_number = 2
+
+            self.speed = 800
 
         elif not self.touching_ground:
             self.speed += 1
 
-        self.image = self.player_sprites[self.sprite_number][0]
-        self.rect = self.player_sprites[self.sprite_number][1]
+        self.image = self.player_sprites[self.sprite_number]
 
-
-        self.image = transform.flip(self.image, self.facing_left, False)
+        if self.facing_left:
+            self.image = transform.flip(
+                self.player_sprites[self.sprite_number], self.facing_left, False)
 
         self.old_rect = self.rect.copy()
         self.input()
@@ -126,10 +134,10 @@ class Player(sprite.Sprite):
 
         # Horizontal Collision
         self.position.x += (self.direction.x*self.speed*deltatime)
-        self.rect.x = self.position.x
+        self.rect.x = round(self.position.x)
         self.collision("x", group)
 
         # Vertical Collision
         self.position.y += (self.direction.y*self.speed*deltatime)
-        self.rect.y = self.position.y
+        self.rect.y = round(self.position.y)
         self.collision("y", group)
