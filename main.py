@@ -44,11 +44,6 @@ while True:
     player.update(dt,level)
     screen.blit(splashscreen,(0,0))
 
-    player_trail = player.position.copy()
-    player_trail.x = player.rect.centerx
-    player_trail.y = player.rect.bottom
-
-    particles.draw(player_trail,screen)
     screen.blit(level_surface,(0,0))
 
     screen.blit(player.image,player.position)

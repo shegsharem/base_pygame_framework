@@ -35,7 +35,7 @@ class Player(sprite.Sprite):
 
         self.position = Vector2(0,0)
         self.direction = Vector2()
-        self.speed = 700
+        self.velocity = Vector2(0,20)
 
 
     def input(self) -> None:
@@ -110,15 +110,9 @@ class Player(sprite.Sprite):
         :param deltatime: used for smooth motion
         :type deltatime: float
         """
-        if self.touching_ground:
-            if self.sprite_number > 2:
-                self.sprite_number -= 1
-            else: self.sprite_number = 2
 
-            self.speed = 800
-
-        elif not self.touching_ground:
-            self.speed += 1
+        if not self.touching_ground:
+            self.velocity.y += 1
 
         self.image = self.player_sprites[self.sprite_number]
 
@@ -133,11 +127,11 @@ class Player(sprite.Sprite):
             self.direction = self.direction.normalize()
 
         # Horizontal Collision
-        self.position.x += (self.direction.x*self.speed*deltatime)
-        self.rect.x = round(self.position.x)
+        self.position.x += (self.direction.x*self.velocity.x*deltatime)
+        self.rect.x = self.position.x
         self.collision("x", group)
 
         # Vertical Collision
-        self.position.y += (self.direction.y*self.speed*deltatime)
-        self.rect.y = round(self.position.y)
+        self.position.y += (self.direction.y*self.velocity.y*deltatime)
+        self.rect.y = self.position.y
         self.collision("y", group)
